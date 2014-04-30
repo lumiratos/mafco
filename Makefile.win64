@@ -1,0 +1,103 @@
+BIN_DIR = ./win64
+OBJS_DIR =./objs.win64
+CC = /usr/bin/x86_64-w64-mingw32-gcc # 64-bit Windows gcc
+
+CFLAGS_NULL_DEV = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -DNULL_DEV -fstrict-aliasing -ffast-math -msse2
+CFLAGSD = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -DDEBUG_1 -fstrict-aliasing -ffast-math -msse2
+CFLAGS = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -ffast-math -msse2
+
+#CFLAGS_NULL_DEV = -Wall -g -DTHREADS -D_FILE_OFFSET_BITS=64 -DNULL_DEV -fstrict-aliasing -ffast-math -msse2
+#CFLAGSD = -Wall -g -DTHREADS -D_FILE_OFFSET_BITS=64 -DDEBUG_1 -fstrict-aliasing -ffast-math -msse2
+#CFLAGS = -Wall -g -DTHREADS -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -ffast-math -msse2
+
+LIBS = -lm -lpthread
+
+PROGS = $(BIN_DIR)/MAFCOenc64.exe $(BIN_DIR)/MAFCOdec64.exe \
+
+#PROGS = $(BIN_DIR)/MAFCOenc64.exe $(BIN_DIR)/MAFCOdec64.exe \
+#	$(BIN_DIR)/MAFCOencD64.exe $(BIN_DIR)/MAFCOencND64.exe \
+#	$(BIN_DIR)/MAFCOdecND64.exe
+
+OBJS =	$(OBJS_DIR)/mem.o $(OBJS_DIR)/ac.o $(OBJS_DIR)/common.o \
+	$(OBJS_DIR)/context.o $(OBJS_DIR)/msab.o $(OBJS_DIR)/slines.o \
+	$(OBJS_DIR)/qlines.o $(OBJS_DIR)/ilines.o $(OBJS_DIR)/elines.o \
+	$(OBJS_DIR)/models.o $(OBJS_DIR)/hash.o $(OBJS_DIR)/element.o
+
+all:	dir $(PROGS)
+
+dir:
+	@if [ ! -d $(OBJS_DIR) ];\
+	then\
+		mkdir $(OBJS_DIR);\
+	fi
+	@if [ ! -d $(BIN_DIR) ];\
+	then\
+		mkdir $(BIN_DIR);\
+	fi
+	cp ./DLLs/win64/*.dll $(BIN_DIR)
+
+
+$(BIN_DIR)/MAFCOenc64.exe: MAFEnc.c *.h $(OBJS)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/MAFCOenc64.exe MAFEnc.c $(OBJS) $(LIBS)
+
+$(BIN_DIR)/MAFCOdec64.exe: MAFDec.c *.h $(OBJS)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/MAFCOdec64.exe MAFDec.c $(OBJS) $(LIBS)
+
+#$(BIN_DIR)/MAFCOencD64.exe: MAFEnc.c *.h $(OBJS)
+#	$(CC) $(CFLAGSD) -o $(BIN_DIR)/MAFCOencD64.exe MAFEnc.c $(OBJS) $(LIBS)
+
+#$(BIN_DIR)/MAFCOencND64.exe: MAFEnc.c *.h $(OBJS)
+#	$(CC) $(CFLAGS_NULL_DEV) -o $(BIN_DIR)/MAFCOencND64.exe MAFEnc.c $(OBJS) $(LIBS)
+
+#$(BIN_DIR)/MAFCOdecND64.exe: MAFDec.c *.h $(OBJS)
+#	$(CC) $(CFLAGS_NULL_DEV) -o $(BIN_DIR)/MAFCOdecND64.exe MAFDec.c $(OBJS) $(LIBS)
+
+
+
+$(OBJS_DIR)/msab.o: msab.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/msab.o msab.c
+
+$(OBJS_DIR)/slines.o: slines.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/slines.o slines.c	
+	
+$(OBJS_DIR)/qlines.o: qlines.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/qlines.o qlines.c	
+
+$(OBJS_DIR)/ilines.o: ilines.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/ilines.o ilines.c	
+
+$(OBJS_DIR)/elines.o: elines.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/elines.o elines.c	
+
+$(OBJS_DIR)/ac.o: ac.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/ac.o ac.c
+
+$(OBJS_DIR)/mem.o: mem.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/mem.o mem.c
+
+$(OBJS_DIR)/common.o: common.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/common.o common.c
+
+$(OBJS_DIR)/context.o: context.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/context.o context.c
+
+$(OBJS_DIR)/models.o: models.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/models.o models.c
+
+$(OBJS_DIR)/element.o: element.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/element.o element.c
+	
+$(OBJS_DIR)/hash.o: hash.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/hash.o hash.c
+
+clean:
+	/bin/rm -fr $(OBJS_DIR)
+	#/bin/rm -f $(PROGS)
+	/bin/rm -fr $(BIN_DIR)
+
+clean-all:
+	/bin/rm -fr $(OBJS_DIR)
+	#/bin/rm -f $(PROGS)
+	/bin/rm -fr $(BIN_DIR)
+	/bin/rm -f *~ *.dat
+	clear
