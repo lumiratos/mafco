@@ -720,7 +720,7 @@ void DecodeMAFPart(void *ptr)
 	
 	
 	// Open temporary file for put the decoded information
-	outFp = Fopen(threadsData->tmpOutDecFile, "w");
+	outFp = Fopen(threadsData->tmpOutDecFile, "wb");
 	
 	//printf("Output file: '%s'\n", threadsData->tmpOutDecFile);
 	//printf("Input file: '%s'\n", threadsData->inputFile);
