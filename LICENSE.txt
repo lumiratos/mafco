@@ -1,17 +1,20 @@
-	MAFCO: a compression tool for MAF files
-    Copyright (C) 2014  Luís M. O. Matos
+MAFCO: a compression tool for MAF files
+Copyright (C) 2014  Luís M. O. Matos
 
-	These programs are supplied free of charge for research purposes only,
-	and my not be sold or incorporated into any commercial product. You can
-	redistribute it and/or modify it under the terms of the GNU General 
-	Public License as published by the Free Software Foundation; either 
-	version 2 of the License, or any later version.
-	
-	These programs are distributed in the hope that it will be useful, 
-	but there is ABSOLUTELY NO WARRANTY of any sort, nor any undertaking 
-	that they are fit for ANY PURPOSE WHATSOEVER. Use them at your own risk. 
-	If you do happen to find a bug, or have modifications to suggest, please 
-	report the same to Luis M. O. Matos, luismatos@ua.pt. The copyright notice
-	above and this statement of conditions must remain an integral part of each 
-	and every copy made of these files. See the GNU General Public License for 
-	more details.
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+Use this software at your own risk. If you do happen to find a 
+bug, or have modifications to suggest, please report the same 
+to Luis M. O. Matos (luismatos@ua.pt).
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
