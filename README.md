@@ -39,4 +39,4 @@ MAFCO: a compression tool for MAF data (BIOINFORMATICS)
 -->
 
 ## Copyright ##
-Copyright (c) 2014 Luís M. O. Matos. See LICENSE.txt for further details.
+Copyright (c) 2014 Luís M. O. Matos. See [LICENSE.txt](https://github.com/lumiratos/mafco/blob/master/LICENSE.txt) for further details.
