@@ -1,4 +1,4 @@
 This folder contains two subfolders "win32" and "win64" that contain the
-DLL files required to execute the program in a Windows plataform. The
+DLL files required to execute the program in a Windows platform. The
 files were downloaded from the "Mingw-builds Project" site:
 http://mingw-w64.sourceforge.net/download.php#mingw-builds
