@@ -211,7 +211,7 @@ GlobalInfo *globalInfo;
 		
 	// GLOBAL VARIABLES FOR DEBUG MODE
 	AceDebuggers 	*aceDebuggers;
-	DebugInfo 		*debugInfo;
+	DebugInfo 	*debugInfo;
 	
 	// Function used to process the debug statistic information
 	void 	CreateACEDebugger			(uint8_t);
@@ -227,32 +227,32 @@ GlobalInfo *globalInfo;
 // Local functions header definition
 void 	ReadMAFPortion					(void *);
 void 	ReadMAFHeaderLines				(FILE *, uint8_t, MSAB *, ACEncoder *, 
-										ACModels *, FieldsLimits *, 
+							ACModels *, FieldsLimits *, 
 										StorageBitsInfo	*);
 void	EndMAFReading					(FILE *, uint8_t, uint8_t, uint8_t, MSAB *, 
-										StorageBitsInfo *, ACEncoder *, ACModels *, 
+							StorageBitsInfo *, ACEncoder *, ACModels *, 
 										CModels *, CTemplate *, FILE *, uint64_t);
 void 	EndPartReading					(uint8_t, MSAB *, StorageBitsInfo *, 
-										ACEncoder *, ACModels *, uint64_t);
+							ACEncoder *, ACModels *, uint64_t);
 
-void 	ReadSLine						(FILE *, uint8_t, MSAB *);
-void 	ReadQLine						(FILE *, uint8_t, MSAB *);
-void 	ReadILine						(FILE *, uint8_t, MSAB *);
-void 	ReadELine						(FILE *, uint8_t, MSAB *, FieldsLimits *);
+void 	ReadSLine					(FILE *, uint8_t, MSAB *);
+void 	ReadQLine					(FILE *, uint8_t, MSAB *);
+void 	ReadILine					(FILE *, uint8_t, MSAB *);
+void 	ReadELine					(FILE *, uint8_t, MSAB *, FieldsLimits *);
 
-void	EncodeMSAB						(uint8_t, MSAB *, ACEncoder *, ACModels *, 
-										CModels *, CTemplate *, FieldsLimits *, 
+void	EncodeMSAB					(uint8_t, MSAB *, ACEncoder *, ACModels *, 
+							CModels *, CTemplate *, FieldsLimits *, 
 										StorageBitsInfo *);
 void 	EncodeSLinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *, 
-										CModels *, CTemplate *, FieldsLimits *, 
+							CModels *, CTemplate *, FieldsLimits *, 
 										StorageBitsInfo *);
 void 	EncodeQLinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *, 
-										CModels *);
+							CModels *);
 void 	EncodeILinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *, 
-										CModels *, FieldsLimits *, 
+							CModels *, FieldsLimits *, 
 										StorageBitsInfo *);
 void	EncodeELinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *, 
-										CModels *, StorageBitsInfo *);
+							CModels *, StorageBitsInfo *);
 										
 void	CreateGlobalInfo				(uint8_t);
 void	FreeGlobalInfo					(uint8_t);
@@ -264,7 +264,8 @@ void 	PrintGlobalInfo					(uint8_t);
 int main(int argc, char *argv[])
 {
 	char tmpOutDir[FILENAME_MAX]="";
-	char outFileName[FILENAME_MAX]="mergedEncodedFile.dat";
+	//char outFileName[FILENAME_MAX]="mergedEncodedFile.dat";
+	char outFileName[FILENAME_MAX]="";
 	char outMSABInfoFileName[FILENAME_MAX]="MSAB-Sizes.info";
 	UChar template = DEFAULT_TEMPLATE, *buffer;
 	
@@ -1088,6 +1089,12 @@ int main(int argc, char *argv[])
 	#ifdef NULL_DEV
 		printf("The encoded stream was redirected to /dev/null.\n");
 	#else
+		// The output file was not specified by the -o flag
+		if(Strcmp(outFileName, "") == 0) 
+		{
+			Strcpy(outFileName, argv[argc-1], FILENAME_MAX);
+			Strcat(outFileName, ".enc", FILENAME_MAX);
+		}
 		// Open file for append the binary files of each thread
 		outFp = Fopen(outFileName, "wb");
 	

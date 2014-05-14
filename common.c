@@ -436,6 +436,54 @@ uint64_t Strtoul(const char *str, int32_t base)
 	}	
 	return (uint64_t)lnum;
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -	
+
+char *Strstr(const char *str1, const char *str2)
+{
+	if(str1 == NULL)
+	{
+		fprintf(stderr, "Error (Strstr): the string to be scanned is NULL.\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	if(str2 == NULL)
+	{
+		fprintf(stderr, "Error (Strstr): the string containing the sequence of characters to match is NULL.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	return strstr(str1, str2);
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -	
+
+int32_t EndsWith(const char *inStr, const char *terminationStr)
+{
+	size_t l1, l2;
+
+	if(inStr == NULL)
+	{
+		fprintf(stderr, "Error (EndsWith): the input string to be scanned is NULL.\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	if(terminationStr == NULL)
+	{
+		fprintf(stderr, "Error (EndsWith): the termination string is NULL.\n");
+		exit(EXIT_FAILURE);
+	}
+	
+	l1 = Strlen(inStr);
+	l2 = Strlen(terminationStr);
+	
+	// Termination string is bigger than the input string
+	if(l2 > l1) return 0x0;
+	
+	// Compare the last l2 characters ob both strings
+	return (strcmp(terminationStr, inStr + (l2 - l1)) == 0);
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -	
 
 int32_t Atoi(const char* str)

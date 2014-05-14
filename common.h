@@ -1,18 +1,18 @@
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//	Copyright 2013/2014 IEETA/DETI - University of Aveiro, Portugal.		 -
-//	All Rights Reserved.													 -
-//																			 -
-//	These programs are supplied free of charge for research purposes only,   -
-//	and may not be sold or incorporated into any commercial product. There   -
-//	is ABSOLUTELY NO WARRANTY of any sort, nor any undertaking that they     -
-//	are fit for ANY PURPOSE WHATSOEVER. Use them at your own risk. If you	 - 
-//	do happen to find a bug, or have modifications to suggest, please report -
-//	the same to Luis M. O. Matos, luismatos@ua.pt. The copyright notice      -
-//	above and this statement of conditions must remain an integral part of   -
-//	each and every copy made of these files.								 -
-//																			 -
-//	Description: functions for handling with files, strings, etc.			 -
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -- 
+//	Copyright 2013/2014 IEETA/DETI - University of Aveiro, Portugal.		-
+//	All Rights Reserved.								-
+//									 		-
+//	These programs are supplied free of charge for research purposes only,		-
+//	and may not be sold or incorporated into any commercial product. There		-
+//	is ABSOLUTELY NO WARRANTY of any sort, nor any undertaking that they		-
+//	are fit for ANY PURPOSE WHATSOEVER. Use them at your own risk. If you		- 
+//	do happen to find a bug, or have modifications to suggest, please report	-
+//	the same to Luis M. O. Matos, luismatos@ua.pt. The copyright notice      	-
+//	above and this statement of conditions must remain an integral part of   	-
+//	each and every copy made of these files.					-
+//										 	-
+//	Description: functions for handling with files, strings, etc.			-
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - --
 
 #ifndef COMMON_H_INCLUDED
 #define COMMON_H_INCLUDED
@@ -67,45 +67,48 @@ typedef struct
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-FILE      	*Fopen						(const char *, const char *);
-void		Fclose						(FILE *);
-void 		Fseeko						(FILE *, off_t, int32_t);
-uint64_t 	Ftello						(FILE *);
-size_t		Fwrite						(const void *, size_t, size_t, FILE *);
-size_t		Fread						(void *, size_t, size_t, FILE *);
-uint8_t		FileExists					(const char *);
+FILE      	*Fopen				(const char *, const char *);
+void		Fclose				(FILE *);
+void 		Fseeko				(FILE *, off_t, int32_t);
+uint64_t 	Ftello				(FILE *);
+size_t		Fwrite				(const void *, size_t, size_t, FILE *);
+size_t		Fread				(void *, size_t, size_t, FILE *);
+uint8_t		FileExists			(const char *);
 
-void		Remove						(const char *);
+void		Remove				(const char *);
 
-size_t 		Strlen						(const char *);
-char 		*Strcpy						(char *, const char *, size_t);
-char 		*Strcat						(char *, const char *, size_t);
-int32_t 	Strcmp						(const char *, const char *);
-int64_t		Strtol						(const char *, int32_t);	
-uint64_t	Strtoul						(const char *, int32_t);	
+size_t 		Strlen				(const char *);
+char 		*Strcpy				(char *, const char *, size_t);
+char 		*Strcat				(char *, const char *, size_t);
+int32_t 	Strcmp				(const char *, const char *);
+int64_t		Strtol				(const char *, int32_t);	
+uint64_t	Strtoul				(const char *, int32_t);	
+char 		*Strstr				(const char *, const char *);
 
-int32_t		Atoi						(const char *);
-uint32_t	Atoui						(const char *);
-uint64_t 	Atoul						(const char *);
+int32_t 	EndsWith			(const char *, const char *);
+
+int32_t		Atoi				(const char *);
+uint32_t	Atoui				(const char *);
+uint64_t 	Atoul				(const char *);
 	
 uint64_t 	GetNumberOfBytesInFile		(const char *);
 void 		PrintHumanReadableBytes		(uint64_t);
-uint16_t	GetNumberOfBits				(uint64_t);
-uint8_t		GetNumberOfDigits			(uint64_t);
+uint16_t	GetNumberOfBits			(uint64_t);
+uint8_t		GetNumberOfDigits		(uint64_t);
 
 uint8_t		StatusCharacter2Symbol		(UChar);
 UChar		Symbol2StatusCharacter		(uint8_t);		
 
-void		ShiftBuffer					(uint8_t *buf, uint8_t bufSize, uint8_t newSymbol);
+void		ShiftBuffer			(uint8_t *buf, uint8_t bufSize, uint8_t newSymbol);
 
 void 		PrintParameterIntegerOption	(const char *, const char *, 
-										const char *, uint32_t);
+						const char *, uint32_t);
 void		PrintParameterCharOption	(const char *, const char *, 
-										const char *, char);
+						const char *, char);
 void		PrintParameterStringOption	(const char *, const char *, 
-										const char *, const char *);
-void		PrintStringOption			(const char *, const char *, 
-										const char *);
+						const char *, const char *);
+void		PrintStringOption		(const char *, const char *, 
+						const char *);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

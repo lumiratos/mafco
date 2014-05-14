@@ -92,7 +92,8 @@ void 	WriteMSABToFile		(MSAB *, FILE *);
 	
 int main(int argc, char *argv[])
 {
-	char outFileName[FILENAME_MAX] = "decodedFile.maf";
+	//char outFileName[FILENAME_MAX] = "decodedFile.maf";
+	char outFileName[FILENAME_MAX] = "";
 	char tmpOutDir[FILENAME_MAX] = "", *buffer;
 	UChar template;	
 	uint8_t help=0x0, nThreads=DEFAULT_NUMBER_OF_THREADS; 
@@ -615,6 +616,25 @@ int main(int argc, char *argv[])
 		// Merge the outputed files into a single MAF file
 		if(mergeMAF == 0x1)
 		{
+			// The user did not specified an output file name?
+			if(Strcmp(outFileName, "") == 0)
+			{
+				// The input file ends with .enc?
+				//if(Strstr(argv[argc-1], ".enc") != NULL)
+				if(EndsWith(argv[argc-1], ".enc"))
+				{
+					
+					Strcpy(outFileName, argv[argc-1], FILENAME_MAX);
+					// Replace .enc per .dec
+					outFileName[Strlen(outFileName)-3] = 'd';
+					outFileName[Strlen(outFileName)-2] = 'e';
+				}
+				else
+				{
+					Strcpy(outFileName, argv[argc-1], FILENAME_MAX);
+					Strcat(outFileName, ".dec", FILENAME_MAX);
+				}
+			}
 			// Open output MAF file for writting
 			outFp = Fopen(outFileName, "w");
 
