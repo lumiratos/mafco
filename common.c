@@ -477,11 +477,11 @@ int32_t EndsWith(const char *inStr, const char *terminationStr)
 	l1 = Strlen(inStr);
 	l2 = Strlen(terminationStr);
 	
-	// Termination string is bigger than the input string
+	// Termination string is bigger than the input string?
 	if(l2 > l1) return 0x0;
 	
-	// Compare the last l2 characters ob both strings
-	return (strcmp(terminationStr, inStr + (l2 - l1)) == 0);
+	// Compare the last l2 characters of both strings.
+	return (strcmp(terminationStr, inStr + (l1 - l2)) == 0);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -	
