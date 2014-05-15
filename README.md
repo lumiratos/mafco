@@ -28,6 +28,134 @@ to get the "MAFCOenc64.exe" (encoder) "MAFCOdec64.exe" (decoder) executables.
 If you are not able to get the executables, just use the precompiled ones available in "win32" and "win64" folders. 
 Because of the pthread library, the DLL files that are inside the "DLLs" folder must be in the same location of the executables in order to be able to run the encoder and the decoder. There are two DLL files. One for 32-bits and the other one for 64-bits operating system.
 
+## Usage ##
+### Encoding ###
+The MAFCOenc/MAFCOenc32.exe/MAFCOenc64.exe programs have a very extensive interface because there are a lot of parameters that can be defined by the user. In the following you can find a description the most relevant parameters available.
+
+<pre>MAFCOenc [Options] ... [MAF File]</pre>
+
+The most relevant options are:
+<pre>
+  [-o EncodedFile]<br>
+  [-O TemporaryDir]<br>
+  [-nt nThreads]<br>
+  [-ng nGOBs]<br>
+  [-t Template]<br>
+  [-sm ModelOrder]
+</pre>
+
+<ul>
+  <li>[-o EncodedFile]</li>
+  <ul>
+    <li>If present, it writes the encoded data into file "EncodedFile". If not present, the output file name is the same
+    as the input file name with ".enc" appended.
+    </li>
+  </ul>
+  <li>[-O TemporaryDir]</li>
+  <ul>
+    <li>In case of not having enough disk space in the current directory, this option allows the encoder to use the path
+    specified by "TemporaryDir" to create the temporary files that are a result of the splitting process.
+    </li>
+  </ul>
+  <li>[-nt nThreads]</li>
+  <ul>
+    <li>Maximum number of threads during encoding. The user can define the number of parallel processes but the encoder
+    can use a lower number of parallel processes due to the -ng flag. For instance, if the user specified a higher number
+    of threads when compared to the number specified by the -ng flag, the encoder will set the number of threads to the
+    number defined in that parameter ("nThreads" <= "nGOBs"). If this flag is not present, the number of threads is by
+    default 4 (equal to the number of Group Of Blocks in the -ng flag)
+    </li>
+  </ul>
+  <li>[-ng nGOBs]</li>
+  <ul>
+    <li>The number of parts in which the MAF file is divided. Each part is then encoded independently from the other  
+    parts. The larger this number, the higher the possibility of parallelization (see also the -nt flag). However, if
+    these parts happen to be too small, the compression rate may decrease. If this flag is not present, the encoder
+    will split the input MAF file into 4 pieces (Group of Blocks).
+    </li>
+  </ul>
+  <li>[-t Template]</li>
+  <ul>
+    <li>When present it will define the template that will be used to encode the 2D DNA alignments. MAFCO provides a set
+    of 5 templates that are represented by the letters 'A'-'E'. By default, the encoder uses the template 'C' with depth     10 as depited next:
+      <table align="center">
+        <tr> <td></td> <td></td> <td>4</td> </tr>
+        <tr> <td></td> <td>8</td> <td>3</td> </tr>
+        <tr> <td></td> <td>7</td> <td>2</td> </tr>
+        <tr> <td>10</td> <td>6</td> <td>1</td> </tr>
+        <tr> <td>9</td> <td>5</td> <td>X</td> </tr>
+      </table>
+    </li>
+  </ul>
+  <li>[-sm ModelOrder]</li>
+  <ul>
+    <li>When specified, will indicate the model order to use for the template indicated by the -t flag. By default the 
+    the model order is 10 for template 'C'.
+    </li>
+  </ul>
+</ul>
+
+### Decoding ###
+The MAFCOdec/MAFCOdec32.exe/MAFCOdec64.exe programs have the following interface:
+
+<pre>MAFCOdec [Options] ... [Encoded MAF File]</pre>
+
+The most relevant options are:
+<pre>
+  [-o DecodedFile]<br>
+  [-O TemporaryDir]<br>
+  [-nt nThreads]<br>
+  [-ng Gi:Gj]<br>
+  [-ng Gi]<br>
+</pre>
+
+<ul>
+  <li>[-o DecodedFile]</li>
+  <ul>
+    <li>If present, it writes the decoded data into file "DecodedFile". If not present, the output file name is the same
+    as the input file name with ".dec" appended.
+    </li>
+  </ul>
+  <li>[-O TemporaryDir]</li>
+  <ul>
+    <li>In case of not having enough disk space in the current directory, this option allows the decoder to use the path
+    specified by "TemporaryDir" to create the temporary files that are a result of the decoding process.
+    </li>
+  </ul>
+  <li>[-nt nThreads]</li>
+  <ul>
+    <li>Maximum number of threads during decoding. The decoder can use a different number of parallel processes that were
+    used by the encoder. This allows modest machines to be able to decompress data that was encoded in a powerfull 
+    computer with high parallel processing capability, using a single thread.
+    </li>
+  </ul>
+  <li>[-ng Gi:Gj]</li>
+  <li>[-ng Gi]</li>
+  <ul>
+    <li>If present, this option allows the user to only decode a range [Gi - Gj] of GOBs (Group of Blocks) or a single
+    one [Gi]. This
+    is only possible if in the encoder the MAF file was splitted in several GOBs. By default the decoder decodes all 
+    the GOBs (the entire MAF file).
+    </li>
+  </ul>
+</ul>
+
+### Examples ###
+In the following, we will show some examples of how to use the MAFCO tool in a linux environment. It is important to emphasize that in order to be able to split the MAF file in several pieces, the encoder needs an input file in RAW format (no compression). 
+
+Using the default parameters we can encode a MAF file by typing:
+<pre>luismatos@localhost:~/mafco$ MAFCOenc chrM-multiz28way.maf</pre>
+This will create the encoded file "chrM-multiz28way.maf.enc" that can be decoded using the following command:
+<pre>luismatos@localhost:~/mafco$ MAFCOdec chrM-multiz28way.maf.enc</pre>
+The decoder will create the file "chrM-multiz28way.maf.dec" that should be the same as the original file "chrM-multiz28way.maf". You can verify that by using the diff or cmp command:
+<pre>luismatos@localhost:~/mafco$ cmp chrM-multiz28way.maf chrM-multiz28way.maf.dec
+luismatos@localhost:~/mafco$ diff chrM-multiz28way.maf chrM-multiz28way.maf.dec</pre>
+
+Let say that you want to encode the MAF file using only 2 threads, splitting the original file into 8 GOBs (parts), using the C template with order 8, and the output file should by "encodedFile.dat". In order to do that you need to type:
+<pre>luismatos@localhost:~/mafco$ MAFCOenc -nt 2 -ng 8 -t C -sm 8 -o encodedFile.dat chrM-multiz28way.maf</pre>
+Now if you want to decode only the first 4 GOBs of the "encodedFile.dat", using a single thread and put the decoded data at file "first4GOBsDecoded.maf" just type:
+<pre>luismatos@localhost:~/mafco$ MAFCOdec -nt 1 -ng 1:4 -o first4GOBsDecoded.maf encodedFile.dat </pre>
+
 ## Issues ##
 At the time, there are no relevant issues detected but if you find one please let me know using the [Issues link](https://github.com/lumiratos/mafco/issues) at GitHub.
 
