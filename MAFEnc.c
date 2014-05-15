@@ -928,7 +928,7 @@ int main(int argc, char *argv[])
 	nTotalBytes = GetNumberOfBytesInFile(argv[argc-1]);
 	printf("File '%s' has ", argv[argc-1]);
 	PrintHumanReadableBytes(nTotalBytes);
-	printf(" (%"PRIu64" bytes).\n", nTotalBytes);
+	printf(" (%"PRIu64" bytes).\n\n", nTotalBytes);
 	
 	// Fill thread data that will be passed as a parameter when calling the 
 	// thread function
@@ -964,7 +964,7 @@ int main(int argc, char *argv[])
 			Strcpy(threadsData[n].tmpOutEncFile, "/dev/null", FILENAME_MAX);
 		#else
 			// Output file name for each thread
-			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8"", DEFAULT_TMP_ENC_FILE, (int32_t)pid, n);
+			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8"", DEFAULT_TMP_ENC_FILE, (int32_t)pid, n+1);
 			if(tmpSize >= FILENAME_MAX)
 			{
 				fprintf(stderr, "Error (main): error when trying to write formatted output to sized buffer.\n");
@@ -988,7 +988,7 @@ int main(int argc, char *argv[])
 		#ifdef DEBUG_1
 			// Temporary file for writing the MSAB sizes
 			Strcpy(tmpOutFileName, "", 1);
-			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8".info", DEFAULT_MSAB_INFO_FILE, (int32_t)pid, n);
+			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8".info", DEFAULT_MSAB_INFO_FILE, (int32_t)pid, n+1);
 			if(tmpSize >= FILENAME_MAX)
 			{
 				fprintf(stderr, "Error (main): error when trying to write formatted output to sized buffer.\n");
@@ -1073,17 +1073,17 @@ int main(int argc, char *argv[])
 		//pthread_create (&threads[n], NULL, (void *) &readMAFPart, (void *)&data[n]);
 		pthread_create (&threads[n], NULL, (void *) &ReadMAFPortion, (void *)&threadsData[n]);
 		//pthread_create (&threads[n], NULL, (void *) &ReadMAFPortionV2, (void *)&threadsData[n]);
-		printf("Thread %"PRIu8" started.\n", n);
+		printf("Thread %"PRIu8" started.\n", n+1);
 	}
-	
+	printf("\n");	
 	
 	// Waits for all threads to finish
 	for(n = 0; n != nThreads; ++n)
 	{
 		pthread_join(threads[n], NULL);
-		printf("Thread %"PRIu8" ended.\n", n);
+		printf("Thread %"PRIu8" ended.\n", n+1);
 	}	
-		
+	printf("\n");	
 	
 	// Output the compress stream to /dev/null
 	#ifdef NULL_DEV
@@ -1167,7 +1167,7 @@ int main(int argc, char *argv[])
 				// Write this information in the output file
 				Fwrite(&nTotalBytes, sizeof(uint64_t), 1, outFp);
 				//printf("File %s has %"PRIu64" bytes.\n", threadsData[n].tmpOutEncFile, nTotalBytes);
-				printf("File %s has %"PRIu64" bytes.\n", tmpOutFileName, nTotalBytes);
+				//printf("File %s has %"PRIu64" bytes.\n", tmpOutFileName, nTotalBytes);
 			}
 		}	
 		
@@ -1203,8 +1203,7 @@ int main(int argc, char *argv[])
 					Fwrite(buffer, 1, readBufferSize, outFp);
 				}
 		
-				//printf("File %s appended!\n", threadsData[n].tmpOutEncFile);
-				printf("File %s appended!\n", tmpOutFileName);
+				//printf("File %s appended!\n", tmpOutFileName);
 		
 				// Close the input file
 				Fclose(inFp);
@@ -1380,7 +1379,7 @@ void ReadMAFPortion(void *ptr)
 	for(GOBId = 0; GOBId < threadsData->nGOBs; GOBId++)
 	{
 		//printf("--------------------------------------------------\n");
-		//printf("Thread %"PRIu32" | Part %"PRIu32"\n", threadNumber, partId);
+		//printf("Thread %"PRIu32" | Part %"PRIu32"\n", threadNumber+1, partId+1);
 		skip = 0x0;
 		totalBlocks = 0;
 		
@@ -1388,9 +1387,9 @@ void ReadMAFPortion(void *ptr)
 		tmpSize=snprintf(outFileName, FILENAME_MAX, "%s-PART_%04"PRIu32"_OUTOF_%04"PRIu32".dat", threadsData->tmpOutEncFile, GOBId+1, threadsData->nGOBs);
 		if(tmpSize >= FILENAME_MAX)
 		{
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: error when trying to write formatted output to sized buffer.\n", threadNumber);
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: sprintf function tried to wrote %"PRIu64" characters + '\\0'.\n", threadNumber, (uint64_t)tmpSize);
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: buffer max size = %"PRIu32".\n", threadNumber, (uint32_t)FILENAME_MAX);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: error when trying to write formatted output to sized buffer.\n", threadNumber+1);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: sprintf function tried to wrote %"PRIu64" characters + '\\0'.\n", threadNumber+1, (uint64_t)tmpSize);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: buffer max size = %"PRIu32".\n", threadNumber+1, (uint32_t)FILENAME_MAX);
 			pthread_exit(NULL);
 		}	
 		
@@ -1449,7 +1448,7 @@ void ReadMAFPortion(void *ptr)
 			{
 				if(!fgets(msab->line, maxLineSize, inFp))
 				{
-					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber);
+					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber+1);
 					pthread_exit(NULL);
 				}
 			} 
@@ -1461,10 +1460,10 @@ void ReadMAFPortion(void *ptr)
 			// The variable "line" contains the score information that we need to extract
 			if(sscanf(msab->line,"a score=%lf", &msab->score) != 1)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line read           : '%s'", threadNumber, msab->line);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line format expected: a score=###...#.000000\n", threadNumber);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line read           : '%s'", threadNumber+1, msab->line);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line format expected: a score=###...#.000000\n", threadNumber+1);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
 				pthread_exit(NULL);
 			}	
 		
@@ -1530,9 +1529,9 @@ void ReadMAFPortion(void *ptr)
 						// Verify the number of rows of the current MSAB is bigger than maxMSABNRows 
 						if(msab->sLinesData->nRows > maxMSABNRows)
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber, totalBlocks);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber, msab->sLinesData->nRows);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber, maxMSABNRows);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber+1, totalBlocks);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber+1, msab->sLinesData->nRows);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNRows);
 							fprintf(stderr, "Rerun the encoder using an higher '-nr' paramater value ( > %"PRIu32").\n", msab->sLinesData->nRows);
 							pthread_exit(NULL);
 						}
@@ -1540,9 +1539,9 @@ void ReadMAFPortion(void *ptr)
 						// Verify the number of columns of the current MSAB
 						if(msab->sLinesData->nCols > maxMSABNCols)
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber, totalBlocks);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber, msab->sLinesData->nCols);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber, maxMSABNCols);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber+1, totalBlocks);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber+1, msab->sLinesData->nCols);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNCols);
 							fprintf(stderr, "Rerun the encoder using an higher '-nc' paramater value ( > %"PRIu32").\n", msab->sLinesData->nCols);						
 							pthread_exit(NULL);
 						}
@@ -1588,9 +1587,9 @@ void ReadMAFPortion(void *ptr)
 						{
 							if(fscanf(inFp, " score=%lf\n", &msab->score) != 1)				
 							{
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);							
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);							
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
 								pthread_exit(NULL);
 							}
 						}
@@ -1615,9 +1614,9 @@ void ReadMAFPortion(void *ptr)
 						// Read the next score information
 						if(fscanf(inFp, " score=%lf\n", &msab->score) != 1)				
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
 							pthread_exit(NULL);
 						}
 					}
@@ -1625,7 +1624,7 @@ void ReadMAFPortion(void *ptr)
 				
 				// In case of an unexpected character
 				default:
-					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected character '%c' (ascii: %"PRId8").\n", threadNumber, c, c);
+					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected character '%c' (ascii: %"PRId8").\n", threadNumber+1, c, c);
 					fprintf(stderr, "At Byte: %"PRIu64"\n", Ftello(inFp));
 					pthread_exit(NULL);
 			}	
@@ -1639,9 +1638,9 @@ void ReadMAFPortion(void *ptr)
 			// Verify the number of rows of the current MSAB is bigger than maxMSABNRows 
 			if(msab->sLinesData->nRows > maxMSABNRows)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber, totalBlocks);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber, msab->sLinesData->nRows);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber, maxMSABNRows);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber+1, totalBlocks);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber+1, msab->sLinesData->nRows);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNRows);
 				fprintf(stderr, "Rerun the encoder using an higher '-nr' paramater value ( > %"PRIu32").\n", msab->sLinesData->nRows);
 				pthread_exit(NULL);
 			}
@@ -1649,9 +1648,9 @@ void ReadMAFPortion(void *ptr)
 			// Verify the number of columns of the current MSAB
 			if(msab->sLinesData->nCols > maxMSABNCols)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber, totalBlocks);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber, msab->sLinesData->nCols);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber, maxMSABNCols);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber+1, totalBlocks);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber+1, msab->sLinesData->nCols);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNCols);
 				fprintf(stderr, "Rerun the encoder using an higher '-nc' paramater value ( > %"PRIu32").\n", msab->sLinesData->nCols);						
 				pthread_exit(NULL);
 			}
@@ -1706,7 +1705,7 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 		// Read line
 		if(!fgets(line, maxLineSize, inFp))
 		{
-			fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber);
+			fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber+1);
 			pthread_exit(NULL);
 		}
 	
@@ -1718,7 +1717,7 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 			// Verify if the size of the line if higher than HEADER_LINE_MAX_SIZE
 			if (Strlen(line) > maxHeaderLineSize)
 			{
-				fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: MAF header line is too big!\n", threadNumber);
+				fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: MAF header line is too big!\n", threadNumber+1);
 				fprintf(stderr, "Line read (%"PRIu64" characters): '%s'\n", (uint64_t)Strlen(line), line);
 				fprintf(stderr, "Maximum MAF header line size allowed is %"PRIu32" characters.\n", maxHeaderLineSize);
 				fprintf(stderr, "Rerun the encoder using an higher '-mhs' paramater value ( > %"PRIu64").\n", (uint64_t)Strlen(line));
@@ -1743,10 +1742,10 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 	// The variable "line" contains the score information that we need to extract
 	if(sscanf(line,"a score=%lf", &msab->score) != 1)
 	{
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line read           : '%s'", threadNumber, line);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line read           : '%s'", threadNumber+1, line);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
 		pthread_exit(NULL);
 	}
 
@@ -1802,7 +1801,7 @@ void EndMAFReading(FILE *inFp, uint8_t threadNumber, uint8_t eofMAF,
 	FreeTemplate(cTemplate);
 	
 	
-	HashingStats(msab->hashTable);
+	//HashingStats(msab->hashTable);
 	FreeMSAB(msab);
 
 	pthread_exit(NULL);
@@ -1855,7 +1854,7 @@ void ReadSLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// Read the 's' lines header info of the MSAB
 	if(fscanf(inpFp, "%s %"SCNu32" %"SCNu32" %c %"SCNu32"\n", msab->sourceName, &start, &seqSize, &strand, &sourceSize) != 5)
 	{
-		fprintf(stderr, "Error (readSLine)[Thread %02"PRIu8"]: failed to get the 's' line.\n", threadNumber);
+		fprintf(stderr, "Error (readSLine)[Thread %02"PRIu8"]: failed to get the 's' line.\n", threadNumber+1);
 		pthread_exit(NULL);
 	}
 		
@@ -1912,7 +1911,7 @@ void ReadQLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// Read the species.chromosome info
 	if(fscanf(inpFp, "%s", msab->sourceName) != 1)
 	{
-		fprintf(stderr, "Error (readQLine)[Thread %02"PRIu8"]: failed to get the 'q' line\n", threadNumber);
+		fprintf(stderr, "Error (readQLine)[Thread %02"PRIu8"]: failed to get the 'q' line\n", threadNumber+1);
 		pthread_exit(NULL);
 	}
 	
@@ -1953,7 +1952,7 @@ void ReadILine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// i <specie.chr> <leftStatus> <leftCount> <rightStatus> <rightCount>
 	if(fscanf(inpFp, "%s %1c %"SCNu32" %1c %"SCNu32"\n", msab->sourceName, &leftStatus, &leftCount, &rightStatus, &rightCount) != 5)
 	{
-		fprintf(stderr, "Error (readILine)[Thread %02"PRIu8"]: failed to get the 'i' line\n", threadNumber);
+		fprintf(stderr, "Error (readILine)[Thread %02"PRIu8"]: failed to get the 'i' line\n", threadNumber+1);
 		pthread_exit(NULL);
 	}
 	
@@ -1977,7 +1976,7 @@ void ReadELine(FILE *inpFp, uint8_t threadNumber, MSAB *msab,
 	if(fscanf(inpFp, "%s %"SCNu32" %"SCNu32" %c %"SCNu32" %c\n", msab->sourceName, 
 		&start, &seqSize, &strand, &sourceSize, &status) != 6)
 	{
-		fprintf(stderr, "Error (readELine)[Thread %02"PRIu8"]: failed to get the 'e' line\n", threadNumber);
+		fprintf(stderr, "Error (readELine)[Thread %02"PRIu8"]: failed to get the 'e' line\n", threadNumber+1);
 		pthread_exit(NULL);
 	}
 	
@@ -1985,7 +1984,7 @@ void ReadELine(FILE *inpFp, uint8_t threadNumber, MSAB *msab,
 	// The number of columns limit can be used as a reference because they are related
 	if(seqSize > fieldsLimits->maxMSABNCols)
 	{
-		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: sequence size of the following 'e' line is to big\n", threadNumber);
+		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: sequence size of the following 'e' line is to big\n", threadNumber+1);
 		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: e %s %"PRIu32" %"PRIu32" %c %"PRIu32" %c", 
 			threadNumber, msab->sourceName, start, seqSize, strand, sourceSize, status);
 		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: maximum sequence size value allowed in this context = %"PRIu32"\n", 
@@ -2080,8 +2079,8 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 	score = ((msab->score >= 0.0) ? (uint64_t)msab->score : (uint64_t)(-1.0*msab->score));
 	if(score > fieldsLimits->maxAbsScoreValue)
 	{
-		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: absolute score value %"PRIu32" is to high!\n", threadNumber, score);
-		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: maximum absolute score value allowed: %"PRIu32".\n", threadNumber, fieldsLimits->maxAbsScoreValue); 
+		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: absolute score value %"PRIu32" is to high!\n", threadNumber+1, score);
+		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: maximum absolute score value allowed: %"PRIu32".\n", threadNumber+1, fieldsLimits->maxAbsScoreValue); 
 		fprintf(stderr, "Rerun the encoder using an higher '-mas' paramater value ( > %"PRIu32").\n", score);
 		pthread_exit(NULL);
 	}

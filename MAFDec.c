@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 		PrintStringOption("-h", "", "(print this help)");
 		PrintStringOption("-v", "", "(print version number)");
 		
-		PrintParameterStringOption("-o", "<outFileName>", "(output MAF file name)", outFileName);
+		PrintStringOption("-o", "<outFileName>", "(output MAF file name)");
 		PrintStringOption("-O", "<temporary output dir>", "(temporary directory to store the files of each thread)");
 		PrintParameterIntegerOption("-nt", "<nThreads>", "(number of threads)", nThreads);
 		//PrintParameterStringOption("-p", "<Pi:Pj> or <Pi>", "(parts to decode from the encoded file)", "All parts");
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
 				
 	// Get the number of bytes of the 
 	nTotalBytes = GetNumberOfBytesInFile(argv[argc-1]);
-	printf("Input encoded file '%s' has %"PRIu64" bytes.\n", argv[argc-1], nTotalBytes);
+	printf("Input encoded file '%s' has %"PRIu64" bytes.\n\n", argv[argc-1], nTotalBytes);
 	
 	// Open the file for reading the header information
 	inFp = Fopen(argv[argc-1], "rb");
@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
 		//if(n == 0) sizesCumSum[n] = sizeOfBinaryFiles[n];
 		//else sizesCumSum[n] = sizesCumSum[n-1] + sizeOfBinaryFiles[n]
 		//printf("sizeOfBinaryFiles[%"PRIu8"] = %"PRIu64" bytes.\n", n, sizeOfBinaryFiles[n]);
-		printf("GOBs %"PRIu32" has %"PRIu64" bytes.\n", n, sizeOfBinaryFiles[n]);
+		printf("GOBs %"PRIu32" has %"PRIu64" bytes.\n", n+1, sizeOfBinaryFiles[n]);
 	}
 	
 	printf("\n");
@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
 	{
 		if(n == 0) sizesCumSum[n] = encFileHeaderSize;
 		else sizesCumSum[n] = sizesCumSum[n-1] + sizeOfBinaryFiles[n-1];
-		printf("GOB %"PRIu32" start offset at pos %"PRIu64" bytes.\n", n, sizesCumSum[n]);
+		//printf("GOB %"PRIu32" start offset at pos %"PRIu64" bytes.\n", n, sizesCumSum[n]);
 	}
 	
 	// Verify of the number of threads according to the number of parts to decode
@@ -489,7 +489,8 @@ int main(int argc, char *argv[])
 		#else
 			// Output file name for each thread
 			//sprintf(tmpOutFileName, "%s%02"PRIu8".maf", DEFAULT_TMP_DEC_FILE, n);
-			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%010"PRId32"-T_%02"PRIu8".maf", DEFAULT_TMP_DEC_FILE, (int32_t)pid, n);			
+			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%010"PRId32"-T_%02"PRIu8".maf", DEFAULT_TMP_DEC_FILE, (int32_t)pid, n+1);
+
 			if(tmpSize >= FILENAME_MAX)
 			{
 				fprintf(stderr, "Error (main): error when trying to write formatted output to sized buffer.\n");
@@ -600,14 +601,14 @@ int main(int argc, char *argv[])
 		// Lauch threads
 		pthread_create(&threads[n], NULL, (void *) &DecodeMAFPart, (void *)&threadsData[n]);
 		//pthread_create(&threads[n], NULL, (void *) &DecodeMAFPartV2, (void *)&threadsData[n]);
-		printf("Thread %02"PRIu8" created and launched.\n", n);
+		printf("Thread %02"PRIu8" created and launched.\n", n+1);
 	}
-
+	printf("\n");
 	// Wait for all threads to finish
 	for(n=0; n != nThreads; ++n)
 	{
 		pthread_join(threads[n], NULL);
-		printf("Thread %02"PRIu8" ended.\n", n);
+		printf("Thread %02"PRIu8" ended.\n", n+1);
 	}
 	
 	
