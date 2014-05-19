@@ -24,7 +24,7 @@ The source code of MAFCO is not prepared to be compiled in Windows without using
 <pre>make -f Makefile.win32</pre>
 to get the "MAFCOenc32.exe" (encoder) "MAFCOdec32.exe" (decoder) executables (32-bits architecture) and for the 64-bits architecture just type
 <pre>make -f Makefile.win64</pre> 
-to get the "MAFCOenc64.exe" (encoder) "MAFCOdec64.exe" (decoder) executables.
+to get the "MAFCOenc64.exe" (encoder) and "MAFCOdec64.exe" (decoder) executables.
 If you are not able to get the executables, just use the precompiled ones available in "win32" and "win64" folders. 
 Because of the pthread library, the DLL files that are inside the "DLLs" folder must be in the same location of the executables in order to be able to run the encoder and the decoder. There are two DLL files. One for 32-bits and the other one for 64-bits operating system.
 
@@ -147,13 +147,13 @@ Using the default parameters we can encode a MAF file by typing:
 <pre>luismatos@localhost:~/mafco$ MAFCOenc chrM-multiz28way.maf</pre>
 This will create the encoded file "chrM-multiz28way.maf.enc" that can be decoded using the following command:
 <pre>luismatos@localhost:~/mafco$ MAFCOdec chrM-multiz28way.maf.enc</pre>
-The decoder will create the file "chrM-multiz28way.maf.dec" that should be the same as the original file "chrM-multiz28way.maf". You can verify that by using the diff or cmp command:
+The decoder will create the file "chrM-multiz28way.maf.dec" that should be the same as the original file "chrM-multiz28way.maf". You can verify that by using the _diff_ or _cmp_ command:
 <pre>luismatos@localhost:~/mafco$ cmp chrM-multiz28way.maf chrM-multiz28way.maf.dec
 luismatos@localhost:~/mafco$ diff chrM-multiz28way.maf chrM-multiz28way.maf.dec</pre>
 
-Let say that you want to encode the MAF file using only 2 threads, splitting the original file into 8 GOBs (parts), using the C template with order 8, and the output file should by "encodedFile.dat". In order to do that you need to type:
+Lets say that you want to encode the MAF file using only 2 threads, splitting the original file into 8 GOBs (parts), using the 'C' template with order 8, and the output file should by "encodedFile.dat". In order to do that, you need to type:
 <pre>luismatos@localhost:~/mafco$ MAFCOenc -nt 2 -ng 8 -t C -sm 8 -o encodedFile.dat chrM-multiz28way.maf</pre>
-Now if you want to decode only the first 4 GOBs of the "encodedFile.dat", using a single thread and put the decoded data at file "first4GOBsDecoded.maf" just type:
+Now if you want to decode only the first 4 GOBs of the "encodedFile.dat", using a single thread and to put the decoded data at file "first4GOBsDecoded.maf" just type:
 <pre>luismatos@localhost:~/mafco$ MAFCOdec -nt 1 -ng 1:4 -o first4GOBsDecoded.maf encodedFile.dat </pre>
 
 ## Issues ##
