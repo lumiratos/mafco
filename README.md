@@ -147,7 +147,7 @@ This will create the encoded file "chrM-multiz28way.maf.enc" that can be decoded
 <pre>$ MAFCOdec chrM-multiz28way.maf.enc</pre>
 The decoder will create the file "chrM-multiz28way.maf.dec" that should be the same as the original file "chrM-multiz28way.maf". You can verify that by using the _diff_ or _cmp_ command:
 <pre>$ cmp chrM-multiz28way.maf chrM-multiz28way.maf.dec
-luismatos@localhost:~/mafco$ diff chrM-multiz28way.maf chrM-multiz28way.maf.dec</pre>
+$ diff chrM-multiz28way.maf chrM-multiz28way.maf.dec</pre>
 
 Lets say that you want to encode the MAF file using only 2 threads, splitting the original file into 8 GOBs (parts), using the 'C' template with order 8, and the output file should be "encodedFile.dat". In order to do that, you need to type:
 <pre>$ MAFCOenc -nt 2 -ng 8 -t C -sm 8 -o encodedFile.dat chrM-multiz28way.maf</pre>
