@@ -55,7 +55,8 @@ The most relevant options are:
         <tr> 
           <td width="25%">-t [template]</td> 
           <td width="75%">When present it will define the template that will be used to encode the 2D DNA alignments. MAFCO provides a set of 5 templates that are represented by the letters 'A'-'E'. By default, the encoder uses the template 'C' with depth 10 as next:
-          <p><a href="/lumiratos/mafco/blob/master/template.png" target="_blank"><img src="/lumiratos/mafco/blob/master/template.png" alt="Screenshot" style="max-width:100%;"></a></p>
+          <!-- <p><a href="template.png" target="_blank"><img src="template.png" alt="Screenshot" style="max-width:20%;"></a></p> -->
+          <p align="center"><a href="template.png" target="_blank"><img src="template.png" alt="Screenshot" width="200"></a></p>
           </td>
         </tr>
         <tr> 
