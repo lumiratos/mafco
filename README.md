@@ -32,112 +32,63 @@ Because of the pthread library, the DLL files that are inside the "DLLs" folder 
 ### Encoding ###
 The MAFCOenc/MAFCOenc32.exe/MAFCOenc64.exe programs have a very extensive interface because there are a wide variety of parameters that can be defined by the user. In the following you can find a description with the most relevant parameters available.
 
-<pre>MAFCOenc [Options] ... [MAF File]</pre>
+<pre>Usage: MAFCOenc [Options] ... [MAF File]</pre>
 
 The most relevant options are:
-<pre>
-  [-o EncodedFile]<br>
-  [-O TemporaryDir]<br>
-  [-nt nThreads]<br>
-  [-ng nGOBs]<br>
-  [-t Template]<br>
-  [-sm ModelOrder]
-</pre>
-
-<ul>
-  <li>[-o EncodedFile]</li>
-  <ul>
-    <li>If present, it writes the encoded data into file "EncodedFile". If not present, the output file name is the same
-    as the input file name with ".enc" appended.
-    </li>
-  </ul>
-  <li>[-O TemporaryDir]</li>
-  <ul>
-    <li>In thr case of not having enough disk space in the current directory, this option allows the encoder to use the
-    path specified by "TemporaryDir" to create the temporary files that are a result of the splitting process.
-    </li>
-  </ul>
-  <li>[-nt nThreads]</li>
-  <ul>
-    <li>Maximum number of threads during encoding. The user can define the number of parallel processes but the encoder
-    can use a lower number of parallel processes due to the -ng flag. For instance, if the user specified a higher number
-    of threads when compared to the number specified by the -ng flag, the encoder will set the number of threads to the
-    number defined in the parameter ("nThreads" <= "nGOBs"). If this flag is not present, the number of threads is by
-    default 4 (equal to the number of Group Of Blocks in the -ng flag)
-    </li>
-  </ul>
-  <li>[-ng nGOBs]</li>
-  <ul>
-    <li>The number of parts in which the MAF file is divided. Each part is then encoded independently from the other  
-    parts. Larger number of parts makes possible the parallelization increasing hability (see also the -nt flag).
-    However, if these parts happen to be too small, the compression rate may decrease. By default, the encoder will split     the input MAF file into 4 pieces (Group of Blocks).
-    </li>
-  </ul>
-  <li>[-t Template]</li>
-  <ul>
-    <li>When present it will define the template that will be used to encode the 2D DNA alignments. MAFCO provides a set
-    of 5 templates that are represented by the letters 'A'-'E'. By default, the encoder uses the template 'C' with depth     10 as next:
-      <table align="center">
-        <tr> <td></td> <td></td> <td>4</td> </tr>
-        <tr> <td></td> <td>8</td> <td>3</td> </tr>
-        <tr> <td></td> <td>7</td> <td>2</td> </tr>
-        <tr> <td>10</td> <td>6</td> <td>1</td> </tr>
-        <tr> <td>9</td> <td>5</td> <td>X</td> </tr>
-      </table>
-    </li>
-  </ul>
-  <li>[-sm ModelOrder]</li>
-  <ul>
-    <li>When specified, will indicate the model order to use in the template indicated by the -t flag. By default the 
-    model order is 10 for template 'C'.
-    </li>
-  </ul>
-</ul>
+<table align="center">
+        <tr> 
+          <td width="25%">-o [encodedFile]</td> 
+          <td width="75%">If present, it writes the encoded data into file "encodedFile". If not present, the output file name is the same as the input file name with ".enc" appended.</td>
+        </tr>
+        <tr> 
+          <td width="25%">-O [temporaryDir]</td> 
+          <td width="75%">In the case of not having enough disk space in the current directory, this option allows the encoder to use the path specified by "temporaryDir" to create the temporary files that are a result of the splitting process.</td>
+        </tr>
+         <tr> 
+          <td width="25%">-nt [nThreads]</td> 
+          <td width="75%">Maximum number of threads during encoding. The user can define the number of parallel processes but the encoder can use a lower number of parallel processes due to the -ng flag. For instance, if the user specified a higher number of threads when compared to the number specified by the -ng flag, the encoder will set the number of threads to the number defined in the parameter ("nThreads" &le; "nGOBs"). If this flag is not present, the number of threads is by default 4 (equal to the number of Group Of Blocks in the -ng flag).</td>
+        </tr>
+        <tr> 
+          <td width="25%">-ng [nGOBs]</td> 
+          <td width="75%">The number of parts in which the MAF file is divided. Each part is then encoded independently from the other parts. Larger number of parts makes possible the parallelization increasing hability (see also the -nt flag). However, if these parts happen to be too small, the compression rate may decrease. By default, the encoder will split the input MAF file into 4 pieces (Group of Blocks).</td>
+        </tr>
+        <tr> 
+          <td width="25%">-t [template]</td> 
+          <td width="75%">When present it will define the template that will be used to encode the 2D DNA alignments. MAFCO provides a set of 5 templates that are represented by the letters 'A'-'E'. By default, the encoder uses the template 'C' with depth 10 as next:
+          <p><a href="/lumiratos/mafco/blob/master/template.png" target="_blank"><img src="/lumiratos/mafco/blob/master/template.png" alt="Screenshot" style="max-width:100%;"></a></p>
+          </td>
+        </tr>
+        <tr> 
+          <td width="25%">-sm [ModelOrder]</td> 
+          <td width="75%">When specified, will indicate the model order to use in the template indicated by the -t flag. By default the model order is 10 for template 'C'.</td>
+        </tr>
+  </table>
 
 ### Decoding ###
 The MAFCOdec/MAFCOdec32.exe/MAFCOdec64.exe programs have the following interface:
 
-<pre>MAFCOdec [Options] ... [Encoded MAF File]</pre>
+<pre>Usage: MAFCOdec [Options] ... [Encoded MAF File]</pre>
 
 The most relevant options are:
-<pre>
-  [-o DecodedFile]<br>
-  [-O TemporaryDir]<br>
-  [-nt nThreads]<br>
-  [-ng Gi:Gj]<br>
-  [-ng Gi]<br>
-</pre>
-
-<ul>
-  <li>[-o DecodedFile]</li>
-  <ul>
-    <li>If present, it writes the decoded data into file "DecodedFile". If not present, the output file name is the same
-    as the input file name with ".dec" appended.
-    </li>
-  </ul>
-  <li>[-O TemporaryDir]</li>
-  <ul>
-    <li>In the case of not having enough disk space in the current directory, this option allows the decoder to use the
-    path specified by "TemporaryDir" to create the temporary files that are a result of the decoding process.
-    </li>
-  </ul>
-  <li>[-nt nThreads]</li>
-  <ul>
-    <li>Maximum number of threads during decoding. The decoder can use a different number of parallel processes that were
-    used by the encoder. This allows modest machines to be able to decompress data that was encoded in a powerfull 
-    computer with high parallel processing capability, using a single thread.
-    </li>
-  </ul>
-  <li>[-ng Gi:Gj]</li>
-  <li>[-ng Gi]</li>
-  <ul>
-    <li>If present, this option allows the user to only decode a range [Gi - Gj] of GOBs (Group of Blocks) or a single
-    one [Gi]. This is only possible if in the encoder the MAF file was splitted in several GOBs. By default it decodes
-    all the GOBs (the entire MAF file).
-    </li>
-  </ul>
-</ul>
-
+<table align="center">
+    <tr> 
+      <td width="25%">-o [decodedFile]</td> 
+        <td width="75%">If present, it writes the decoded data into file "decodedFile". If not present, the output file name is the same as the input file name with ".dec" appended.</td>
+    </tr>
+    <tr> 
+      <td width="25%">-O [temporaryDir]</td> 
+        <td width="75%">In the case of not having enough disk space in the current directory, this option allows the decoder to use the path specified by "temporaryDir" to create the temporary files that are a result of the decoding process.</td>
+    </tr>
+    <tr> 
+      <td width="25%">-nt [nThreads]</td> 
+      <td width="75%">Maximum number of threads during decoding. The decoder can use a different number of parallel processes that were used by the encoder. This allows modest machines to be able to decompress data that was encoded in a powerfull computer with high parallel processing capability, using a single thread.</td>
+    </tr>
+    <tr> 
+      <td width="25%">-ng [Gi:Gj]<br> -ng [Gi]</td> 
+      <td width="75%">If present, this option allows the user to only decode a range [Gi - Gj] of GOBs (Group of Blocks) or a single one [Gi]. This is only possible if in the encoder the MAF file was splitted in several GOBs. By default it decodes all the GOBs (the entire MAF file).</td>
+    </tr>
+  </table>
+      
 ### Examples ###
 In the following, we will show some examples of how to use the MAFCO tool in a linux environment. It is important to emphasize that in order to be able to split the MAF file in several pieces, the encoder needs an input file in RAW format (no compression). 
 
