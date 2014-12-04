@@ -116,5 +116,12 @@ If you use this software, please cite the follwing publication:
 MAFCO: a compression tool for MAF data (BIOINFORMATICS)
 -->
 
+## Data sets ##
+Some data set that can be used for evaluate this tool.
+* [multiz28way](http://hgdownload-test.cse.ucsc.edu/goldenPath/hg18/multiz28way)
+* [multiz28wayB](http://hgdownload-test.cse.ucsc.edu/goldenPath/hg18/multiz28way/multiz28wayAnno.tar.gz)
+* [multiz46way](http://hgdownload-test.cse.ucsc.edu/goldenPath/hg19/multiz46way)
+* [multiz100way](http://hgdownload-test.cse.ucsc.edu/goldenPath/hg19/multiz100way)
+
 ## Copyright ##
 Copyright (c) 2014 Luís M. O. Matos. See [LICENSE.txt](https://github.com/lumiratos/saco/blob/master/LICENSE.txt) for further details.
