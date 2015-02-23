@@ -39,6 +39,7 @@
 #include "msab.h"
 #include "context.h"
 #include "models.h"
+#include "gtod.h"
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -70,50 +71,57 @@ typedef struct
 	StorageBitsInfo	*storageBitsInfo;				// Holds the storage bits information (number of bits to use
 													// in the writeNBits function)
 	HashTableInfo	*hashTableInfo;					// Information to create the hash table (size, hash function, etc.)
+	
+	GTODClock		*gtodClock;						// Clock to measure execution time of each thread
 }
 ThreadsData;
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-typedef struct
-{
-	uint8_t		numberOfHeaderLines;		// Number of MAF header lines (lines that start with '#')
+// OPTIMIZATION MODE OFF?
+#ifdef OPT_OFF	
+	typedef struct
+	{
+		//uint8_t		numberOfHeaderLines;		// Number of MAF header lines (lines that start with '#')
 	
-	uint64_t	*totalBlocks;				// Total number of MSAB
-	uint64_t	*totalLowerCaseBlocks;		// Number of MSAB with lower case bases
-	uint64_t	*totalXchrBlocks;			// Number of MSAB with extra characters
+		uint64_t	*totalBlocks;				// Total number of MSAB
+		uint64_t	*totalLowerCaseBlocks;		// Number of MSAB with lower case bases
+		uint64_t	*totalXchrBlocks;			// Number of MSAB with extra characters
 	
-	uint64_t	*totalSLines;				// Number of 's' lines
-	uint64_t	*totalQLines;				// Number of 'q' lines
-	uint64_t	*totalILines;				// Number of 'i' lines
-	uint64_t	*totalELines;				// Number of 'e' lines
+		uint64_t	*totalSLines;				// Number of 's' lines
+		uint64_t	*totalQLines;				// Number of 'q' lines
+		uint64_t	*totalILines;				// Number of 'i' lines
+		uint64_t	*totalELines;				// Number of 'e' lines
 	
-	uint64_t	*totalBases;				// Total number of bases (with gaps)
-	uint64_t	*totalGaps;					// Total number of gap symbols
-	uint64_t	*totalLowerCaseSymbols;		// Total number of lower case symbols
-	uint64_t	*totalXcharN;				// Total number of extra symbols (n's and N's)
-	uint64_t	*totalXcharNC;				// Total number of extra symbols (n's, N's, c's and C's)
+		uint64_t	*totalBases;				// Total number of bases (with gaps)
+		uint64_t	*totalGaps;					// Total number of gap symbols
+		uint64_t	*totalLowerCaseSymbols;		// Total number of lower case symbols
+		uint64_t	*totalXcharN;				// Total number of extra symbols (n's and N's)
+		uint64_t	*totalXcharNC;				// Total number of extra symbols (n's, N's, c's and C's)
 			
-	uint64_t	*totalNumNegativeOff;		// Total number of negative start offsets
-	uint64_t	*totalNumLargeOff;			// Total number of too large offsets
+		uint64_t	*totalNumNegativeOff;		// Total number of negative start offsets
+		uint64_t	*totalNumLargeOff;			// Total number of too large offsets
 	
-	uint64_t	*totalIrregularStatusI;		// Total number of irregular status in 'i' lines
-	uint64_t	*totalIrregularCounts;		// Total number of irregular counts in 'i' lines
+		uint64_t	*totalIrregularStatusI;		// Total number of irregular status in 'i' lines
+		uint64_t	*totalIrregularCounts;		// Total number of irregular counts in 'i' lines
 	
-	uint64_t	*totalIrregularStatusE;		// Total number of irregular status in 'e' lines
-	uint64_t	*totalIrregularStatusEI;	// Total number of irregular status in 'e' lines
+		uint64_t	*totalIrregularStatusE;		// Total number of irregular status in 'e' lines
+		uint64_t	*totalIrregularStatusEI;	// Total number of irregular status in 'e' lines
 	
-	uint64_t 	*totalBits;					// Total bits of the encoded file
+		uint64_t 	*totalBits;					// Total bits of the encoded file
 	
-	uint64_t	*maxStartOffset;			// Maximum offset value computed
-}
-GlobalInfo;
+		uint64_t	*maxStartOffset;			// Maximum offset value computed
+	}
+	GlobalInfo;
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-// GLOBAL VARIABLES
+	// GLOBAL VARIABLE
+	GlobalInfo *globalInfo;
+	
+#endif // OPT_OFF
 
-GlobalInfo *globalInfo;
+// GLOBAL VARIABLE
+uint8_t		numberOfHeaderLines;		// Number of MAF header lines (lines that start with '#')
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -231,7 +239,8 @@ void 	ReadMAFHeaderLines				(FILE *, uint8_t, MSAB *, ACEncoder *,
 										StorageBitsInfo	*);
 void	EndMAFReading					(FILE *, uint8_t, uint8_t, uint8_t, MSAB *, 
 							StorageBitsInfo *, ACEncoder *, ACModels *, 
-										CModels *, CTemplate *, FILE *, uint64_t);
+										CModels *, CTemplate *, FILE *, GTODClock *,
+										uint64_t);
 void 	EndPartReading					(uint8_t, MSAB *, StorageBitsInfo *, 
 							ACEncoder *, ACModels *, uint64_t);
 
@@ -253,12 +262,14 @@ void 	EncodeILinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *,
 										StorageBitsInfo *);
 void	EncodeELinesData				(uint8_t, MSAB *, ACEncoder *, ACModels *, 
 							CModels *, StorageBitsInfo *);
-										
-void	CreateGlobalInfo				(uint8_t);
-void	FreeGlobalInfo					(uint8_t);
-void 	ComputeGlobalInfo				(uint8_t);
-void 	PrintGlobalInfo					(uint8_t);
 
+// OPTIMIZATION MODE OFF?
+#ifdef OPT_OFF										
+	void	CreateGlobalInfo				(uint8_t);
+	void	FreeGlobalInfo					(uint8_t);
+	void 	ComputeGlobalInfo				(uint8_t);
+	void 	PrintGlobalInfo					(uint8_t);
+#endif // OPT_OFF
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int main(int argc, char *argv[])
@@ -347,6 +358,9 @@ int main(int argc, char *argv[])
 		// Get process ID
 		pid_t pid = getpid();
 	#endif
+	
+	// Init clock
+	InitClock();
 			
 	for(n = 1; n != argc; ++n)
 		if(!(Strcmp("-h", argv[n])))
@@ -776,9 +790,7 @@ int main(int argc, char *argv[])
 			break; 
 		}
 	}
-	
-	
-	
+
 	// Set the hash table size
 	for(n = 1; n != argc-1; ++n)
 	{
@@ -907,9 +919,13 @@ int main(int argc, char *argv[])
 	// Compute the remaing part to ditribute
 	remainingGOBs=nGOBs-(nGOBsPerThread*nThreads);
 	
-	// Allocate memory for threads global variable
-	CreateGlobalInfo(nThreads);
-	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF										
+		// Allocate memory for threads global variable
+		CreateGlobalInfo(nThreads);
+	#endif // OPT_OFF	
+	numberOfHeaderLines = 0;
+		
 	// Buffer to be used in the merge process
 	buffer = (UChar *)Calloc(bufferSize, sizeof(UChar));
 		
@@ -928,7 +944,7 @@ int main(int argc, char *argv[])
 	nTotalBytes = GetNumberOfBytesInFile(argv[argc-1]);
 	printf("File '%s' has ", argv[argc-1]);
 	PrintHumanReadableBytes(nTotalBytes);
-	printf(" (%"PRIu64" bytes).\n\n", nTotalBytes);
+	printf(" (%"PRIu64" bytes).\n", nTotalBytes);
 	
 	// Fill thread data that will be passed as a parameter when calling the 
 	// thread function
@@ -964,7 +980,7 @@ int main(int argc, char *argv[])
 			Strcpy(threadsData[n].tmpOutEncFile, "/dev/null", FILENAME_MAX);
 		#else
 			// Output file name for each thread
-			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8"", DEFAULT_TMP_ENC_FILE, (int32_t)pid, n+1);
+			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8"", DEFAULT_TMP_ENC_FILE, (int32_t)pid, n);
 			if(tmpSize >= FILENAME_MAX)
 			{
 				fprintf(stderr, "Error (main): error when trying to write formatted output to sized buffer.\n");
@@ -988,7 +1004,7 @@ int main(int argc, char *argv[])
 		#ifdef DEBUG_1
 			// Temporary file for writing the MSAB sizes
 			Strcpy(tmpOutFileName, "", 1);
-			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8".info", DEFAULT_MSAB_INFO_FILE, (int32_t)pid, n+1);
+			tmpSize=snprintf(tmpOutFileName, FILENAME_MAX, "%sPID_%05"PRId32"-THREAD_%02"PRIu8".info", DEFAULT_MSAB_INFO_FILE, (int32_t)pid, n);
 			if(tmpSize >= FILENAME_MAX)
 			{
 				fprintf(stderr, "Error (main): error when trying to write formatted output to sized buffer.\n");
@@ -1015,6 +1031,7 @@ int main(int argc, char *argv[])
 		threadsData[n].storageBitsInfo = (StorageBitsInfo *)Calloc(1, sizeof(StorageBitsInfo));
 		threadsData[n].modelsOrder = (ModelsOrder *)Calloc(1, sizeof(ModelsOrder));
 		threadsData[n].hashTableInfo = (HashTableInfo *)Calloc(1, sizeof(HashTableInfo));
+		threadsData[n].gtodClock = (GTODClock *)Calloc(1, sizeof(GTODClock));
 		
 		threadsData[n].fieldsLimits->maxMSABNRows = maxMSABNRows;
 		threadsData[n].fieldsLimits->maxMSABNCols = maxMSABNCols;
@@ -1073,17 +1090,19 @@ int main(int argc, char *argv[])
 		//pthread_create (&threads[n], NULL, (void *) &readMAFPart, (void *)&data[n]);
 		pthread_create (&threads[n], NULL, (void *) &ReadMAFPortion, (void *)&threadsData[n]);
 		//pthread_create (&threads[n], NULL, (void *) &ReadMAFPortionV2, (void *)&threadsData[n]);
-		printf("Thread %"PRIu8" started.\n", n+1);
+		printf("Thread %02"PRIu8" started.\n", n);
 	}
-	printf("\n");	
+	
 	
 	// Waits for all threads to finish
 	for(n = 0; n != nThreads; ++n)
 	{
+		Tic();
 		pthread_join(threads[n], NULL);
-		printf("Thread %"PRIu8" ended.\n", n+1);
+		Tac();
+		printf("Thread %02"PRIu8" ended. Join took %.6lf seconds.\n", n, GetElapsedTime());
 	}	
-	printf("\n");	
+		
 	
 	// Output the compress stream to /dev/null
 	#ifdef NULL_DEV
@@ -1103,7 +1122,8 @@ int main(int argc, char *argv[])
 		//Fwrite(&nThreads, sizeof(uint8_t), 1, outFp);
 		Fwrite(&nGOBs, sizeof(uint32_t), 1, outFp);
 		Fwrite(&template, sizeof(uint8_t), 1, outFp);
-		Fwrite(&(globalInfo->numberOfHeaderLines), sizeof(uint8_t), 1, outFp);
+		//Fwrite(&(globalInfo->numberOfHeaderLines), sizeof(uint8_t), 1, outFp);
+		Fwrite(&numberOfHeaderLines, sizeof(uint8_t), 1, outFp);
 		Fwrite(&maxHeaderLineSize, sizeof(uint32_t), 1, outFp);
 		Fwrite(&maxSrcNameSize, sizeof(uint32_t), 1, outFp);
 			
@@ -1167,11 +1187,14 @@ int main(int argc, char *argv[])
 				// Write this information in the output file
 				Fwrite(&nTotalBytes, sizeof(uint64_t), 1, outFp);
 				//printf("File %s has %"PRIu64" bytes.\n", threadsData[n].tmpOutEncFile, nTotalBytes);
-				//printf("File %s has %"PRIu64" bytes.\n", tmpOutFileName, nTotalBytes);
+				printf("File %s has %"PRIu64" bytes.\n", tmpOutFileName, nTotalBytes);
 			}
 		}	
 		
 		printf("\n");
+		
+		// Tic Clock
+		Tic();
 		
 		// Merging encoded files
 		for(n = 0; n != nThreads; ++n)
@@ -1203,7 +1226,8 @@ int main(int argc, char *argv[])
 					Fwrite(buffer, 1, readBufferSize, outFp);
 				}
 		
-				//printf("File %s appended!\n", tmpOutFileName);
+				//printf("File %s appended!\n", threadsData[n].tmpOutEncFile);
+				printf("File %s appended!\n", tmpOutFileName);
 		
 				// Close the input file
 				Fclose(inFp);
@@ -1219,13 +1243,19 @@ int main(int argc, char *argv[])
 		// Close the output file
 		Fclose(outFp);
 		
+		// Tac Clock
+		Tac();
+		printf("Binary append process took %.6lf secons.\n", GetElapsedTime());
 	#endif // NULL_DEV
 	
 	
-	// Compute and print some statistics
-	ComputeGlobalInfo(nThreads);
-	PrintGlobalInfo(nThreads);
-	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF										
+		// Compute and print some statistics
+		ComputeGlobalInfo(nThreads);
+		PrintGlobalInfo(nThreads);
+	#endif // OPT_OFF
+		
 	// DEBUG MODE
 	#ifdef DEBUG_1
 		ACEDebuggersDone(nThreads);
@@ -1265,8 +1295,12 @@ int main(int argc, char *argv[])
 	
 	
 	printf("\n");
-	printf("Total bits of the encoded file: %19"PRIu64" bits\n", globalInfo->totalBits[nThreads]);
-	
+
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF										
+		printf("Total bits of the encoded file: %19"PRIu64" bits\n", globalInfo->totalBits[nThreads]);
+	#endif // OPT_OFF
+		
 	// NULL DEVICE MODE NOT ACTIVATED
 	#ifndef NULL_DEV
 		// Get the number of bytes of the merged output file
@@ -1284,10 +1318,15 @@ int main(int argc, char *argv[])
 		Free(threadsData[n].storageBitsInfo, sizeof(StorageBitsInfo));
 		Free(threadsData[n].modelsOrder, sizeof(ModelsOrder));
 		Free(threadsData[n].hashTableInfo, sizeof(HashTableInfo));
+		Free(threadsData[n].gtodClock, sizeof(GTODClock));
 	}
 	Free(threadsData, nThreads*sizeof(ThreadsData));
-	FreeGlobalInfo(nThreads);
 	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF										
+		FreeGlobalInfo(nThreads);
+	#endif // OPT_OFF
+		
 	// DEBUG MODE
 	#ifdef DEBUG_1
 		FreeACEDebugger(nThreads);
@@ -1301,7 +1340,9 @@ int main(int argc, char *argv[])
 		printf(" (%"PRIu64" bytes)\n", TotalMemory());
 	}
 	printf("\n");
-			
+	// Tick clock
+	Tic();
+	printf("The encoding process took %.6lf seconds.\n", GetElapsedTimeFromTheStart());		
 	return EXIT_SUCCESS;
 }
 
@@ -1312,6 +1353,9 @@ void ReadMAFPortion(void *ptr)
 	ThreadsData *threadsData;
 	// Type cast to a pointer of ThreadData type            
 	threadsData = (ThreadsData *)ptr;  
+	
+	// Init local clock
+	InitLocalClock(threadsData->gtodClock);
 	
 	char outFileName[FILENAME_MAX]="";
 	char inputFile[FILENAME_MAX]; 
@@ -1379,7 +1423,7 @@ void ReadMAFPortion(void *ptr)
 	for(GOBId = 0; GOBId < threadsData->nGOBs; GOBId++)
 	{
 		//printf("--------------------------------------------------\n");
-		//printf("Thread %"PRIu32" | Part %"PRIu32"\n", threadNumber+1, partId+1);
+		//printf("Thread %"PRIu32" | Part %"PRIu32"\n", threadNumber, partId);
 		skip = 0x0;
 		totalBlocks = 0;
 		
@@ -1387,9 +1431,9 @@ void ReadMAFPortion(void *ptr)
 		tmpSize=snprintf(outFileName, FILENAME_MAX, "%s-PART_%04"PRIu32"_OUTOF_%04"PRIu32".dat", threadsData->tmpOutEncFile, GOBId+1, threadsData->nGOBs);
 		if(tmpSize >= FILENAME_MAX)
 		{
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: error when trying to write formatted output to sized buffer.\n", threadNumber+1);
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: sprintf function tried to wrote %"PRIu64" characters + '\\0'.\n", threadNumber+1, (uint64_t)tmpSize);
-			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: buffer max size = %"PRIu32".\n", threadNumber+1, (uint32_t)FILENAME_MAX);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: error when trying to write formatted output to sized buffer.\n", threadNumber);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: sprintf function tried to wrote %"PRIu64" characters + '\\0'.\n", threadNumber, (uint64_t)tmpSize);
+			fprintf(stderr, "Error (ReadMAFPortion)[Thread %02"PRIu8"]: buffer max size = %"PRIu32".\n", threadNumber, (uint32_t)FILENAME_MAX);
 			pthread_exit(NULL);
 		}	
 		
@@ -1448,7 +1492,7 @@ void ReadMAFPortion(void *ptr)
 			{
 				if(!fgets(msab->line, maxLineSize, inFp))
 				{
-					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber+1);
+					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber);
 					pthread_exit(NULL);
 				}
 			} 
@@ -1460,10 +1504,10 @@ void ReadMAFPortion(void *ptr)
 			// The variable "line" contains the score information that we need to extract
 			if(sscanf(msab->line,"a score=%lf", &msab->score) != 1)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line read           : '%s'", threadNumber+1, msab->line);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line format expected: a score=###...#.000000\n", threadNumber+1);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line read           : '%s'", threadNumber, msab->line);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Line format expected: a score=###...#.000000\n", threadNumber);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
 				pthread_exit(NULL);
 			}	
 		
@@ -1529,9 +1573,9 @@ void ReadMAFPortion(void *ptr)
 						// Verify the number of rows of the current MSAB is bigger than maxMSABNRows 
 						if(msab->sLinesData->nRows > maxMSABNRows)
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber+1, totalBlocks);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber+1, msab->sLinesData->nRows);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNRows);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber, totalBlocks);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber, msab->sLinesData->nRows);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber, maxMSABNRows);
 							fprintf(stderr, "Rerun the encoder using an higher '-nr' paramater value ( > %"PRIu32").\n", msab->sLinesData->nRows);
 							pthread_exit(NULL);
 						}
@@ -1539,9 +1583,9 @@ void ReadMAFPortion(void *ptr)
 						// Verify the number of columns of the current MSAB
 						if(msab->sLinesData->nCols > maxMSABNCols)
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber+1, totalBlocks);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber+1, msab->sLinesData->nCols);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNCols);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber, totalBlocks);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber, msab->sLinesData->nCols);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber, maxMSABNCols);
 							fprintf(stderr, "Rerun the encoder using an higher '-nc' paramater value ( > %"PRIu32").\n", msab->sLinesData->nCols);						
 							pthread_exit(NULL);
 						}
@@ -1556,9 +1600,13 @@ void ReadMAFPortion(void *ptr)
 					
 						// Save some statistics
 						totalBlocks++;
-						globalInfo->totalBlocks[threadNumber]++;
-						globalInfo->totalBases[threadNumber] += (msab->sLinesData->nRows * msab->sLinesData->nCols);
-					
+						
+						// OPTIMIZATION MODE OFF?
+						#ifdef OPT_OFF
+							globalInfo->totalBlocks[threadNumber]++;
+							globalInfo->totalBases[threadNumber] += (msab->sLinesData->nRows * msab->sLinesData->nCols);
+						#endif // OPT_OFF
+							
 						ResetMSAB(msab);
 					
 						// If we reached the upper limit byte (next master block offset), the encoder ends the reading procedure
@@ -1567,7 +1615,8 @@ void ReadMAFPortion(void *ptr)
 							// If this is the last part, the compression is terminated
 							if(GOBId == threadsData->nGOBs-1)
 							{
-								EndMAFReading(inFp, threadNumber, 0x0, ((threadNumber==nThreads-1) ? 0x1 : 0x0), msab, threadsData->storageBitsInfo, acEncoder, acModels, cModels, cTemplate, outMSABInfoFile, totalBlocks);
+								EndMAFReading(inFp, threadNumber, 0x0, ((threadNumber==nThreads-1) ? 0x1 : 0x0), msab, threadsData->storageBitsInfo, acEncoder, 
+								acModels, cModels, cTemplate, outMSABInfoFile, threadsData->gtodClock, totalBlocks);
 							}
 							else
 							{
@@ -1587,9 +1636,9 @@ void ReadMAFPortion(void *ptr)
 						{
 							if(fscanf(inFp, " score=%lf\n", &msab->score) != 1)				
 							{
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);							
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
-								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);							
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
+								fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
 								pthread_exit(NULL);
 							}
 						}
@@ -1605,7 +1654,8 @@ void ReadMAFPortion(void *ptr)
 							//printf("Search species name time: %.3f seconds\n", msaImg->speciesNameSearchTime);
 							
 							// If a '#' character is found it means that the algorithm is in the end reading the final line
-							EndMAFReading(inFp, threadNumber, 0x1, 0x1, msab, threadsData->storageBitsInfo, acEncoder, acModels, cModels, cTemplate, outMSABInfoFile, totalBlocks);	
+							EndMAFReading(inFp, threadNumber, 0x1, 0x1, msab, threadsData->storageBitsInfo, acEncoder, acModels, cModels, cTemplate, 
+								outMSABInfoFile, threadsData->gtodClock, totalBlocks);	
 							
 						}
 					}
@@ -1614,9 +1664,9 @@ void ReadMAFPortion(void *ptr)
 						// Read the next score information
 						if(fscanf(inFp, " score=%lf\n", &msab->score) != 1)				
 						{
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
-							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
+							fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
 							pthread_exit(NULL);
 						}
 					}
@@ -1624,7 +1674,7 @@ void ReadMAFPortion(void *ptr)
 				
 				// In case of an unexpected character
 				default:
-					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected character '%c' (ascii: %"PRId8").\n", threadNumber+1, c, c);
+					fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: unexpected character '%c' (ascii: %"PRId8").\n", threadNumber, c, c);
 					fprintf(stderr, "At Byte: %"PRIu64"\n", Ftello(inFp));
 					pthread_exit(NULL);
 			}	
@@ -1638,9 +1688,9 @@ void ReadMAFPortion(void *ptr)
 			// Verify the number of rows of the current MSAB is bigger than maxMSABNRows 
 			if(msab->sLinesData->nRows > maxMSABNRows)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber+1, totalBlocks);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber+1, msab->sLinesData->nRows);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNRows);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!", threadNumber, totalBlocks);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has two many rows (%"PRIu32" rows).\n", threadNumber, msab->sLinesData->nRows);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of rows allowed is: %"PRIu32".\n", threadNumber, maxMSABNRows);
 				fprintf(stderr, "Rerun the encoder using an higher '-nr' paramater value ( > %"PRIu32").\n", msab->sLinesData->nRows);
 				pthread_exit(NULL);
 			}
@@ -1648,9 +1698,9 @@ void ReadMAFPortion(void *ptr)
 			// Verify the number of columns of the current MSAB
 			if(msab->sLinesData->nCols > maxMSABNCols)
 			{
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber+1, totalBlocks);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber+1, msab->sLinesData->nCols);
-				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber+1, maxMSABNCols);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: The block %"PRIu64" is to big!\n", threadNumber, totalBlocks);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Block has too many columns (%"PRIu32" columns).\n", threadNumber, msab->sLinesData->nCols);
+				fprintf(stderr, "Error (readMAFPortion)[Thread %02"PRIu8"]: Max number of columns allowed is: %"PRIu32".\n", threadNumber, maxMSABNCols);
 				fprintf(stderr, "Rerun the encoder using an higher '-nc' paramater value ( > %"PRIu32").\n", msab->sLinesData->nCols);						
 				pthread_exit(NULL);
 			}
@@ -1665,14 +1715,18 @@ void ReadMAFPortion(void *ptr)
 	
 			// Save some statistics
 			totalBlocks++;
-			globalInfo->totalBlocks[threadNumber]++;
-			globalInfo->totalBases[threadNumber] += (msab->sLinesData->nRows * msab->sLinesData->nCols);
-		
+			
+			// OPTIMIZATION MODE OFF?
+			#ifdef OPT_OFF
+				globalInfo->totalBlocks[threadNumber]++;
+				globalInfo->totalBases[threadNumber] += (msab->sLinesData->nRows * msab->sLinesData->nCols);
+			#endif // OPT_OFF
 			// If this is the last part, the compression is terminated
 			if(GOBId == threadsData->nGOBs-1)
 			{
 				// End reading process
-				EndMAFReading(inFp, threadNumber, 0x0, 0x1, msab, threadsData->storageBitsInfo, acEncoder, acModels, cModels, cTemplate, outMSABInfoFile, totalBlocks);
+				EndMAFReading(inFp, threadNumber, 0x0, 0x1, msab, threadsData->storageBitsInfo, acEncoder, acModels, cModels, 
+					cTemplate, outMSABInfoFile, threadsData->gtodClock, totalBlocks);
 			}
 			// There are still parts to process but there are thing that need be done
 			// after reading a part
@@ -1705,7 +1759,7 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 		// Read line
 		if(!fgets(line, maxLineSize, inFp))
 		{
-			fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber+1);
+			fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: unexpected end-of-file\n", threadNumber);
 			pthread_exit(NULL);
 		}
 	
@@ -1717,16 +1771,21 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 			// Verify if the size of the line if higher than HEADER_LINE_MAX_SIZE
 			if (Strlen(line) > maxHeaderLineSize)
 			{
-				fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: MAF header line is too big!\n", threadNumber+1);
+				fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: MAF header line is too big!\n", threadNumber);
 				fprintf(stderr, "Line read (%"PRIu64" characters): '%s'\n", (uint64_t)Strlen(line), line);
 				fprintf(stderr, "Maximum MAF header line size allowed is %"PRIu32" characters.\n", maxHeaderLineSize);
 				fprintf(stderr, "Rerun the encoder using an higher '-mhs' paramater value ( > %"PRIu64").\n", (uint64_t)Strlen(line));
 				pthread_exit(NULL);
 			}
-
-			// Save the information about the number of MAF header lines
-			globalInfo->numberOfHeaderLines++;
 			
+			// OPTIMIZATION MODE OFF?
+			//#ifdef OPT_OFF					
+				// Save the information about the number of MAF header lines
+				//globalInfo->numberOfHeaderLines++;
+			//#endif // OPT_OFF
+			// Save the information about the number of MAF header lines
+			numberOfHeaderLines++;
+				
 			// Write the size of the line
 			writeNBits(Strlen(line)-1, storageBitsHeaderLine, acEncoder->globalEncoder, acModels->binaryUniformACModel);
 			//WriteNBits(Strlen(line)-1, STORAGE_HEADER_LINE_MAX_SIZE, acEncoders->globalEncoder, acModels->binaryModel);
@@ -1742,10 +1801,10 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 	// The variable "line" contains the score information that we need to extract
 	if(sscanf(line,"a score=%lf", &msab->score) != 1)
 	{
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber+1);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line read           : '%s'", threadNumber+1, line);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber+1);
-		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber+1, Ftello(inFp));
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: failed to get alignment score line!\n", threadNumber);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line read           : '%s'", threadNumber, line);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: line format expected: a score=###...#.000000\n", threadNumber);
+		fprintf(stderr, "Error (readMAFHeaderLines)[Thread %02"PRIu8"]: current file position: byte %"PRIu64"\n", threadNumber, Ftello(inFp));
 		pthread_exit(NULL);
 	}
 
@@ -1758,7 +1817,8 @@ void ReadMAFHeaderLines(FILE *inFp, uint8_t threadNumber, MSAB *msab,
 void EndMAFReading(FILE *inFp, uint8_t threadNumber, uint8_t eofMAF, 
 	uint8_t lastPart, MSAB *msab, StorageBitsInfo *storageBitsInfo, 
 	ACEncoder *acEncoder, ACModels *acModels, CModels *cModels, 
-	CTemplate *cTemplate, FILE *outMSABInfoFile, uint64_t numberOfMSAB)
+	CTemplate *cTemplate, FILE *outMSABInfoFile, GTODClock *gc,
+	uint64_t numberOfMSAB)
 {
 	uint32_t storageBitsMSABRows = storageBitsInfo->storageBitsMSABRows;
 
@@ -1791,9 +1851,12 @@ void EndMAFReading(FILE *inFp, uint8_t threadNumber, uint8_t eofMAF,
 	// Close the encoder
 	ACEncoderDone(acEncoder);
 	
-	// Save the number of bits used
-	globalInfo->totalBits[threadNumber] += ac_encoder_bits(acEncoder->globalEncoder);
-	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF					
+		// Save the number of bits used
+		globalInfo->totalBits[threadNumber] += ac_encoder_bits(acEncoder->globalEncoder);
+	#endif // OPT_OFF
+		
 	// Free allocated memory
 	FreeACEncoder(acEncoder);
 	FreeACModels(acModels);
@@ -1801,9 +1864,14 @@ void EndMAFReading(FILE *inFp, uint8_t threadNumber, uint8_t eofMAF,
 	FreeTemplate(cTemplate);
 	
 	
-	//HashingStats(msab->hashTable);
+	HashingStats(msab->hashTable);
 	FreeMSAB(msab);
 
+	// Tic Clock
+	TicLocal(gc);
+	printf("Thread %02"PRIu8" took %.6lf seconds in the encoding procedure.\n", 
+		threadNumber, GetLocalElapsedTimeFromTheStart(gc));
+		
 	pthread_exit(NULL);
 }
 
@@ -1826,9 +1894,12 @@ void EndPartReading(uint8_t threadNumber, MSAB *msab,
 	// Close the encoder
 	ACEncoderDone(acEncoder);
 	
-	// Save the number of bits used in this part
-	globalInfo->totalBits[threadNumber] += ac_encoder_bits(acEncoder->globalEncoder);
-		
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF					
+		// Save the number of bits used in this part
+		globalInfo->totalBits[threadNumber] += ac_encoder_bits(acEncoder->globalEncoder);
+	#endif // OPT_OFF
+			
 	ResetMSAB(msab);
 	
 	// Reset previous 'e' lines status by setting the field <currentNRows> to zero!
@@ -1854,7 +1925,7 @@ void ReadSLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// Read the 's' lines header info of the MSAB
 	if(fscanf(inpFp, "%s %"SCNu32" %"SCNu32" %c %"SCNu32"\n", msab->sourceName, &start, &seqSize, &strand, &sourceSize) != 5)
 	{
-		fprintf(stderr, "Error (readSLine)[Thread %02"PRIu8"]: failed to get the 's' line.\n", threadNumber+1);
+		fprintf(stderr, "Error (readSLine)[Thread %02"PRIu8"]: failed to get the 's' line.\n", threadNumber);
 		pthread_exit(NULL);
 	}
 		
@@ -1891,11 +1962,13 @@ void ReadSLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	
 	// Set the presence of 'q' line to false just in case
 	msab->linesInfo->elements[currentRow]->qualityInfo = 0x0;
-						
-	// Update the number of 's' lines read
-	globalInfo->totalSLines[threadNumber]++;
-	globalInfo->totalGaps[threadNumber] += (msab->sLinesData->nCols-seqSize);
 	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF					
+		// Update the number of 's' lines read
+		globalInfo->totalSLines[threadNumber]++;
+		globalInfo->totalGaps[threadNumber] += (msab->sLinesData->nCols-seqSize);
+	#endif // OPT_OFF
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1911,7 +1984,7 @@ void ReadQLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// Read the species.chromosome info
 	if(fscanf(inpFp, "%s", msab->sourceName) != 1)
 	{
-		fprintf(stderr, "Error (readQLine)[Thread %02"PRIu8"]: failed to get the 'q' line\n", threadNumber+1);
+		fprintf(stderr, "Error (readQLine)[Thread %02"PRIu8"]: failed to get the 'q' line\n", threadNumber);
 		pthread_exit(NULL);
 	}
 	
@@ -1930,9 +2003,12 @@ void ReadQLine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	//StoreQualityRow(msab->qLinesData, qualityValuesRow, qualityValuesRowSize);
 	StoreQualityRow(msab->qLinesData, qualityValuesRow, qualityValuesRowSize);
 	
-	// Update the number of 'q' lines read
-	globalInfo->totalQLines[threadNumber]++;
-		
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF
+		// Update the number of 'q' lines read
+		globalInfo->totalQLines[threadNumber]++;
+	#endif // OPT_OFF
+			
 	// Set the score status to 1 in order to inform the decoder that we have 
 	// a quality line for the current source that correspond to the previous
 	// 's' line alignment
@@ -1952,14 +2028,17 @@ void ReadILine(FILE *inpFp, uint8_t threadNumber, MSAB *msab)
 	// i <specie.chr> <leftStatus> <leftCount> <rightStatus> <rightCount>
 	if(fscanf(inpFp, "%s %1c %"SCNu32" %1c %"SCNu32"\n", msab->sourceName, &leftStatus, &leftCount, &rightStatus, &rightCount) != 5)
 	{
-		fprintf(stderr, "Error (readILine)[Thread %02"PRIu8"]: failed to get the 'i' line\n", threadNumber+1);
+		fprintf(stderr, "Error (readILine)[Thread %02"PRIu8"]: failed to get the 'i' line\n", threadNumber);
 		pthread_exit(NULL);
 	}
 	
 	StoreInfoRow(msab->iLinesData, leftStatus, rightStatus, leftCount, rightCount);
 	
-	// Update the number of 'i' lines read
-	globalInfo->totalILines[threadNumber]++;
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF
+		// Update the number of 'i' lines read
+		globalInfo->totalILines[threadNumber]++;
+	#endif // OPT_OFF
 }	
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1976,7 +2055,7 @@ void ReadELine(FILE *inpFp, uint8_t threadNumber, MSAB *msab,
 	if(fscanf(inpFp, "%s %"SCNu32" %"SCNu32" %c %"SCNu32" %c\n", msab->sourceName, 
 		&start, &seqSize, &strand, &sourceSize, &status) != 6)
 	{
-		fprintf(stderr, "Error (readELine)[Thread %02"PRIu8"]: failed to get the 'e' line\n", threadNumber+1);
+		fprintf(stderr, "Error (readELine)[Thread %02"PRIu8"]: failed to get the 'e' line\n", threadNumber);
 		pthread_exit(NULL);
 	}
 	
@@ -1984,7 +2063,7 @@ void ReadELine(FILE *inpFp, uint8_t threadNumber, MSAB *msab,
 	// The number of columns limit can be used as a reference because they are related
 	if(seqSize > fieldsLimits->maxMSABNCols)
 	{
-		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: sequence size of the following 'e' line is to big\n", threadNumber+1);
+		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: sequence size of the following 'e' line is to big\n", threadNumber);
 		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: e %s %"PRIu32" %"PRIu32" %c %"PRIu32" %c", 
 			threadNumber, msab->sourceName, start, seqSize, strand, sourceSize, status);
 		fprintf(stderr, "Error (ReadELine)[Thread %02"PRIu8"]: maximum sequence size value allowed in this context = %"PRIu32"\n", 
@@ -2010,8 +2089,11 @@ void ReadELine(FILE *inpFp, uint8_t threadNumber, MSAB *msab,
 	// Update sequence size
 	element->seqSize = seqSize;
 	
-	// Update the number of 'e' lines read
-	globalInfo->totalELines[threadNumber]++;
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF
+		// Update the number of 'e' lines read
+		globalInfo->totalELines[threadNumber]++;
+	#endif // OPT_OFF
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2079,8 +2161,8 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 	score = ((msab->score >= 0.0) ? (uint64_t)msab->score : (uint64_t)(-1.0*msab->score));
 	if(score > fieldsLimits->maxAbsScoreValue)
 	{
-		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: absolute score value %"PRIu32" is to high!\n", threadNumber+1, score);
-		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: maximum absolute score value allowed: %"PRIu32".\n", threadNumber+1, fieldsLimits->maxAbsScoreValue); 
+		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: absolute score value %"PRIu32" is to high!\n", threadNumber, score);
+		fprintf(stderr, "Error (CompressSLinesData)[Thread %02"PRIu8"]: maximum absolute score value allowed: %"PRIu32".\n", threadNumber, fieldsLimits->maxAbsScoreValue); 
 		fprintf(stderr, "Rerun the encoder using an higher '-mas' paramater value ( > %"PRIu32").\n", score);
 		pthread_exit(NULL);
 	}
@@ -2096,7 +2178,12 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 	//////////////////////////////////////////////////////// CASE INFO ENCODING BEGIN
 	// Encode information regarding the presence of lower case letters
 	binaryFlag = ((msab->lowerCaseCount > 0) ? 0x1 : 0x0);
-	globalInfo->totalLowerCaseBlocks[threadNumber] += binaryFlag;
+	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF
+		globalInfo->totalLowerCaseBlocks[threadNumber] += binaryFlag;
+	#endif // OPT_OFF
+		
 	ComputePModel2(cModels->caseFlagCModel, acModels->binaryACModel);
 	acEncodeBinary(acEncoder->globalEncoder, acModels->binaryACModel, binaryFlag);
 	// DEBUG MODE
@@ -2110,7 +2197,12 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 	//////////////////////////////////////////////////////// EXTRA CHAR INFO ENCODING BEGIN
 	// Encode information regarding the presence of extra characters (n and N)
 	binaryFlag = ((msab->xchrCount > 0) ? 0x1 : 0x0);
-	globalInfo->totalXchrBlocks[threadNumber] += binaryFlag;
+	
+	// OPTIMIZATION MODE OFF?
+	#ifdef OPT_OFF
+		globalInfo->totalXchrBlocks[threadNumber] += binaryFlag;
+	#endif // OPT_OFF
+		
 	ComputePModel2(cModels->xchrFlagCModel, acModels->binaryACModel);
 	acEncodeBinary(acEncoder->globalEncoder, acModels->binaryACModel, binaryFlag);
 	// DEBUG MODE
@@ -2121,29 +2213,10 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 	UpdateCModelIdx(cModels->xchrFlagCModel, binaryFlag);
 	//////////////////////////////////////////////////////// EXTRA CHAR INFO ENCODING END
 	
-	//if(msab->score == 2238629.000000)
-	//{
-	/*
-	if(msab->score ==420268.000000)
-	{
-		printf("Score = %lf | Encoding MSAB with %"PRIu32" x %"PRIu32".\n", msab->score, msab->sLinesData->nRows, msab->sLinesData->nCols);
-		//print_ac_model_info(acModels->binaryUniformACModel);
-		//print_ac_encoder_info(acEncoder->globalEncoder);
-	}
-	*/	
-	//printf("Encoding MSAB with %"PRIu32" x %"PRIu32".\n", msab->sLinesData->nRows, msab->sLinesData->nCols);
-	//}
 	
 	//////////////////////////////////////////////////////// HEADER S LINES ENCODING BEGIN
 	for(row = 0; row != msab->sLinesData->nRows; ++row)
 	{
-		/*
-		if( (msab->score ==420268.000000) && (row < 4) )
-		{
-			print_ac_model_info(acModels->binaryUniformACModel);
-			print_ac_encoder_info(acEncoder->globalEncoder);
-		}
-		*/
 		
 		//////////////////////////////////////////////////////// HASH KEY AND ELEMENT ID ENCODING BEGIN
 		writeNBits(msab->linesInfo->hashPositions[row].hashKey, 
@@ -2151,14 +2224,6 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 		writeNBits(msab->linesInfo->hashPositions[row].elementId, 
 				storageBitsInfo->storageBitsHashElementId, acEncoder->globalEncoder, acModels->binaryUniformACModel);
 		
-		//if(msab->score == 2238629.000000 && row < 4)
-		/*
-		if( (msab->score ==420268.000000) && (row < 4) )
-		{
-			printf("Hash Key: %"PRIu32"| Element Id: %"PRIu8"\n", 
-				msab->linesInfo->hashPositions[row].hashKey, msab->linesInfo->hashPositions[row].elementId);
-		}
-		*/		
 		// DEBUG MODE
 		#ifdef DEBUG_1
 			writeNBits(msab->linesInfo->hashPositions[row].hashKey, 
@@ -2195,13 +2260,6 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 			writeString(msab->linesInfo->elements[row]->sourceName, 
 				sourceNameSize, acEncoder->globalEncoder, acModels->binaryUniformACModel);
 			
-			/*
-			//if(msab->score == 2238629.000000 && row < 4)
-			if( (msab->score == 420268.000000) && (row < 4) )
-			{
-				printf("New source '%s' was encoded as raw with %zu characters.\n\n", msab->linesInfo->elements[row]->sourceName, sourceNameSize);
-			}
-			*/	
 			// DEBUG MODE
 			#ifdef DEBUG_1
 				writeNBits(sourceNameSize, 
@@ -2249,12 +2307,6 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 		//	- Using the absolute value in case of a negative offset or to big offset
 		else
 		{
-			/*
-			if( (msab->score ==420268.000000) && (row < 4) )
-			{
-				printf("Source name was already encoded...\n");
-			}
-			*/
 			//////////////////////////////////////////////////////// START POSITION ENCODING BEGIN
 			// The offset value is not always a positive value. There are two situations where it is negative.
 			// First situation: prevStart + prevSequenceSize > currentStart
@@ -2274,19 +2326,22 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 			// This offset value can be negative or positive
 			startOffset = (int64_t)msab->linesInfo->elements[row]->start - msab->linesInfo->elements[row]->prevStart -
 				msab->linesInfo->elements[row]->seqSize;
-				
-			// The start offset is negative
-			if(startOffset < 0) globalInfo->totalNumNegativeOff[threadNumber]++;
 			
-			// The start offset is positive
-			else 
-			{
-				if(startOffset > (int64_t)fieldsLimits->maxStartOffset)
-					globalInfo->totalNumLargeOff[threadNumber]++;
+			// OPTIMIZATION MODE OFF?
+			#ifdef OPT_OFF
+				// The start offset is negative
+				if(startOffset < 0) globalInfo->totalNumNegativeOff[threadNumber]++;
+			
+				// The start offset is positive
+				else 
+				{
+					if(startOffset > (int64_t)fieldsLimits->maxStartOffset)
+						globalInfo->totalNumLargeOff[threadNumber]++;
 				
-				if(startOffset > (int64_t)globalInfo->maxStartOffset[threadNumber])
-					globalInfo->maxStartOffset[threadNumber] = startOffset;
-			}
+					if(startOffset > (int64_t)globalInfo->maxStartOffset[threadNumber])
+						globalInfo->maxStartOffset[threadNumber] = startOffset;
+				}
+			#endif // OPT_OFF
 			
 			
 			// If the start offset is negative or is too big, set the startOffset to -1
@@ -2379,7 +2434,10 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 				UpdateCModelCounter(cModels->caseCModel, caseSymbol);
 				UpdateCModelIdx(cModels->caseCModel, caseSymbol);
 				
-				globalInfo->totalLowerCaseSymbols[threadNumber] += caseSymbol;
+				// OPTIMIZATION MODE OFF?
+				#ifdef OPT_OFF
+					globalInfo->totalLowerCaseSymbols[threadNumber] += caseSymbol;
+				#endif // OPT_OFF
 			}
 			//////////////////////////////////////////////////////// CASE ENCODING END 
 			
@@ -2398,8 +2456,11 @@ void EncodeSLinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 				UpdateCModelCounter(cModels->xchrCModel, xchrSymbol);
 				UpdateCModelIdx(cModels->xchrCModel, xchrSymbol);
 				
-				globalInfo->totalXcharNC[threadNumber]++;				// Extra char in this case is {N, n, C, c}
-				globalInfo->totalXcharN[threadNumber] += xchrSymbol;	// Count the N's and n's				
+				// OPTIMIZATION MODE OFF?
+				#ifdef OPT_OFF
+					globalInfo->totalXcharNC[threadNumber]++;				// Extra char in this case is {N, n, C, c}
+					globalInfo->totalXcharN[threadNumber] += xchrSymbol;	// Count the N's and n's				
+				#endif // OPT_OFF
 			}
 			//////////////////////////////////////////////////////// EXTRA BASES ENCODING END
 			
@@ -2612,8 +2673,12 @@ void EncodeILinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 				{
 					// Encode a binary stream that sinalizes that there is an irregularity in the status symbol
 					binaryFlag = 0x1;
-					globalInfo->totalIrregularStatusI[threadNumber]++;
 					
+					// OPTIMIZATION MODE OFF?
+					#ifdef OPT_OFF										
+						globalInfo->totalIrregularStatusI[threadNumber]++;
+					#endif // OPT_OFF
+						
 					ComputePModel2(cModels->irregularStatusCModel, acModels->binaryACModel);
 					acEncodeBinary(acEncoder->globalEncoder, acModels->binaryACModel, binaryFlag);
 					// DEBUG MODE
@@ -2666,8 +2731,12 @@ void EncodeILinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 				{
 					// Encode a binary stream that sinalizes that there is an irregularity in the count value
 					binaryFlag = 0x1;
-					globalInfo->totalIrregularCounts[threadNumber]++;
 					
+					// OPTIMIZATION MODE OFF?
+					#ifdef OPT_OFF										
+						globalInfo->totalIrregularCounts[threadNumber]++;
+					#endif // OPT_OFF
+						
 					ComputePModel2(cModels->irregularCountCModel, acModels->binaryACModel);
 					acEncodeBinary(acEncoder->globalEncoder, acModels->binaryACModel, binaryFlag);
 					// DEBUG MODE
@@ -2966,9 +3035,12 @@ void EncodeELinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 						UpdateCModelCounter(cModels->eLineStatusCModel, statusSymbol);
 						ShiftBuffer(msab->eLinesData->statusBuffer, msab->eLinesData->bufSize, statusSymbol);
 						//////////////////////////////////////////////////////// STATUS SYMBOL ENCODING END	
-						
-						// Update the number of irregular status symbols in 'e' lines
-						globalInfo->totalIrregularStatusE[threadNumber]++;
+												
+						// OPTIMIZATION MODE OFF?
+						#ifdef OPT_OFF	
+							// Update the number of irregular status symbols in 'e' lines
+							globalInfo->totalIrregularStatusE[threadNumber]++;
+						#endif // OPT_OFF
 					}
 					else
 					{
@@ -3026,8 +3098,11 @@ void EncodeELinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 						ShiftBuffer(msab->eLinesData->statusBuffer, msab->eLinesData->bufSize, statusSymbol);
 						//////////////////////////////////////////////////////// STATUS SYMBOL ENCODING END	
 						
-						// Update the number of irregular status symbols in 'e' lines
-						globalInfo->totalIrregularStatusEI[threadNumber]++;
+						// OPTIMIZATION MODE OFF?
+						#ifdef OPT_OFF
+							// Update the number of irregular status symbols in 'e' lines
+							globalInfo->totalIrregularStatusEI[threadNumber]++;
+						#endif // OPT_OFF
 					}
 					// Regular status symbol
 					else
@@ -3080,147 +3155,150 @@ void EncodeELinesData(uint8_t threadNumber, MSAB *msab, ACEncoder *acEncoder,
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// OPTIMIZATION MODE OFF?
+#ifdef OPT_OFF
 
-void CreateGlobalInfo(uint8_t nThreads)
-{
-	globalInfo = (GlobalInfo *)Calloc(1, sizeof(GlobalInfo));
-	
-	globalInfo->totalBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalLowerCaseBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalXchrBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-
-	globalInfo->totalSLines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalQLines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalILines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalELines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	
-	globalInfo->totalBases = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalGaps = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalLowerCaseSymbols = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalXcharN = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalXcharNC = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	
-	globalInfo->totalNumNegativeOff = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalNumLargeOff = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	
-	globalInfo->totalIrregularStatusI = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalIrregularCounts = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	
-	globalInfo->totalIrregularStatusE = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-	globalInfo->totalIrregularStatusEI = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-		
-	globalInfo->totalBits = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-
-	globalInfo->maxStartOffset = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-void FreeGlobalInfo(uint8_t nThreads)
-{
-	
-	Free(globalInfo->totalBlocks, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalLowerCaseBlocks, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalXchrBlocks, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->totalSLines, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalQLines, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalILines, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalELines, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->totalBases, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalGaps, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalLowerCaseSymbols, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalXcharN, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalXcharNC, (nThreads+1)*sizeof(uint64_t));	
-	
-	Free(globalInfo->totalNumNegativeOff, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalNumLargeOff, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->totalIrregularStatusI, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalIrregularCounts, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->totalIrregularStatusE, (nThreads+1)*sizeof(uint64_t));
-	Free(globalInfo->totalIrregularStatusEI, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->totalBits, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo->maxStartOffset, (nThreads+1)*sizeof(uint64_t));
-	
-	Free(globalInfo, sizeof(GlobalInfo));
-	globalInfo = NULL;
-}
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-void ComputeGlobalInfo(uint8_t nThreads)
-{
-	uint8_t n;
-	for(n = 0; n != nThreads; ++n)
+	void CreateGlobalInfo(uint8_t nThreads)
 	{
-		globalInfo->totalBlocks[nThreads] += globalInfo->totalBlocks[n];
-		globalInfo->totalLowerCaseBlocks[nThreads] += globalInfo->totalLowerCaseBlocks[n];
-		globalInfo->totalXchrBlocks[nThreads] += globalInfo->totalXchrBlocks[n];
+		globalInfo = (GlobalInfo *)Calloc(1, sizeof(GlobalInfo));
+	
+		globalInfo->totalBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalLowerCaseBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalXchrBlocks = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+
+		globalInfo->totalSLines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalQLines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalILines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalELines = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+	
+		globalInfo->totalBases = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalGaps = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalLowerCaseSymbols = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalXcharN = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalXcharNC = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+	
+		globalInfo->totalNumNegativeOff = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalNumLargeOff = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+	
+		globalInfo->totalIrregularStatusI = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalIrregularCounts = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+	
+		globalInfo->totalIrregularStatusE = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+		globalInfo->totalIrregularStatusEI = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
 		
-		globalInfo->totalSLines[nThreads] += globalInfo->totalSLines[n];
-		globalInfo->totalQLines[nThreads] += globalInfo->totalQLines[n];
-		globalInfo->totalILines[nThreads] += globalInfo->totalILines[n];
-		globalInfo->totalELines[nThreads] += globalInfo->totalELines[n];
-		
-		globalInfo->totalBases[nThreads] += globalInfo->totalBases[n];
-		globalInfo->totalGaps[nThreads] += globalInfo->totalGaps[n];
-		globalInfo->totalLowerCaseSymbols[nThreads] += globalInfo->totalLowerCaseSymbols[n];
-		globalInfo->totalXcharN[nThreads] += globalInfo->totalXcharN[n];
-		globalInfo->totalXcharNC[nThreads] += globalInfo->totalXcharNC[n];
-		
-		globalInfo->totalNumNegativeOff[nThreads] += globalInfo->totalNumNegativeOff[n];
-		globalInfo->totalNumLargeOff[nThreads] += globalInfo->totalNumLargeOff[n];
-		
-		globalInfo->totalIrregularStatusI[nThreads] += globalInfo->totalIrregularStatusI[n];
-		globalInfo->totalIrregularCounts[nThreads] += globalInfo->totalIrregularCounts[n];
-		
-		globalInfo->totalIrregularStatusE[nThreads] += globalInfo->totalIrregularStatusE[n];
-		globalInfo->totalIrregularStatusEI[nThreads] += globalInfo->totalIrregularStatusEI[n];
-		
-		globalInfo->totalBits[nThreads] += globalInfo->totalBits[n];
-		
-		globalInfo->maxStartOffset[nThreads] = ( (globalInfo->maxStartOffset[n] > globalInfo->maxStartOffset[nThreads]) ? 
-			globalInfo->maxStartOffset[n] : globalInfo->maxStartOffset[nThreads]);
+		globalInfo->totalBits = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
+
+		globalInfo->maxStartOffset = (uint64_t *)Calloc(nThreads+1, sizeof(uint64_t));
 	}
-}
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	
+	void FreeGlobalInfo(uint8_t nThreads)
+	{
+	
+		Free(globalInfo->totalBlocks, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalLowerCaseBlocks, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalXchrBlocks, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->totalSLines, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalQLines, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalILines, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalELines, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->totalBases, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalGaps, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalLowerCaseSymbols, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalXcharN, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalXcharNC, (nThreads+1)*sizeof(uint64_t));	
+	
+		Free(globalInfo->totalNumNegativeOff, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalNumLargeOff, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->totalIrregularStatusI, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalIrregularCounts, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->totalIrregularStatusE, (nThreads+1)*sizeof(uint64_t));
+		Free(globalInfo->totalIrregularStatusEI, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->totalBits, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo->maxStartOffset, (nThreads+1)*sizeof(uint64_t));
+	
+		Free(globalInfo, sizeof(GlobalInfo));
+		globalInfo = NULL;
+	}
 
-void PrintGlobalInfo(uint8_t nThreads)
-{
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total block read:                                   %19"PRIu64" |\n", globalInfo->totalBlocks[nThreads]);
-	printf("| Total block with lower case symbols:                %19"PRIu64" |\n", globalInfo->totalLowerCaseBlocks[nThreads]);
-	printf("| Total block with extra symbols (N's and n's):       %19"PRIu64" |\n", globalInfo->totalXchrBlocks[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total number of 's' lines:                          %19"PRIu64" |\n", globalInfo->totalSLines[nThreads]);
-	printf("| Total number of 'q' lines:                          %19"PRIu64" |\n", globalInfo->totalQLines[nThreads]);
-	printf("| Total number of 'i' lines:                          %19"PRIu64" |\n", globalInfo->totalILines[nThreads]);
-	printf("| Total number of 'e' lines:                          %19"PRIu64" |\n", globalInfo->totalELines[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total number of bases (with the gaps)               %19"PRIu64" |\n", globalInfo->totalBases[nThreads]);
-	printf("| Total number of gaps                                %19"PRIu64" |\n", globalInfo->totalGaps[nThreads]);
-	printf("| Total number of lower case bases                    %19"PRIu64" |\n", globalInfo->totalLowerCaseSymbols[nThreads]);
-	printf("| Total number of extra symbols {N and n}             %19"PRIu64" |\n", globalInfo->totalXcharN[nThreads]);
-	printf("| Total number of extra symbols {N, n, C, c}          %19"PRIu64" |\n", globalInfo->totalXcharNC[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total number of negative start offsets              %19"PRIu64" |\n", globalInfo->totalNumNegativeOff[nThreads]);
-	printf("| Total number of large start offsets                 %19"PRIu64" |\n", globalInfo->totalNumLargeOff[nThreads]);
-	printf("| Maximum start offset value processed                %19"PRIu64" |\n", globalInfo->maxStartOffset[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total number of irregular status symbols 'i'        %19"PRIu64" |\n", globalInfo->totalIrregularStatusI[nThreads]);
-	printf("| Total number of irregular count values 'i'          %19"PRIu64" |\n", globalInfo->totalIrregularCounts[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-	printf("| Total number of irregular status symbols 'e'        %19"PRIu64" |\n", globalInfo->totalIrregularStatusE[nThreads]);
-	printf("| Total number of irregular status symbols 'e' - 'i'  %19"PRIu64" |\n", globalInfo->totalIrregularStatusEI[nThreads]);
-	printf("+-------------------------------------------------------------------------+\n");
-}
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+	void ComputeGlobalInfo(uint8_t nThreads)
+	{
+		uint8_t n;
+		for(n = 0; n != nThreads; ++n)
+		{
+			globalInfo->totalBlocks[nThreads] += globalInfo->totalBlocks[n];
+			globalInfo->totalLowerCaseBlocks[nThreads] += globalInfo->totalLowerCaseBlocks[n];
+			globalInfo->totalXchrBlocks[nThreads] += globalInfo->totalXchrBlocks[n];
+		
+			globalInfo->totalSLines[nThreads] += globalInfo->totalSLines[n];
+			globalInfo->totalQLines[nThreads] += globalInfo->totalQLines[n];
+			globalInfo->totalILines[nThreads] += globalInfo->totalILines[n];
+			globalInfo->totalELines[nThreads] += globalInfo->totalELines[n];
+		
+			globalInfo->totalBases[nThreads] += globalInfo->totalBases[n];
+			globalInfo->totalGaps[nThreads] += globalInfo->totalGaps[n];
+			globalInfo->totalLowerCaseSymbols[nThreads] += globalInfo->totalLowerCaseSymbols[n];
+			globalInfo->totalXcharN[nThreads] += globalInfo->totalXcharN[n];
+			globalInfo->totalXcharNC[nThreads] += globalInfo->totalXcharNC[n];
+		
+			globalInfo->totalNumNegativeOff[nThreads] += globalInfo->totalNumNegativeOff[n];
+			globalInfo->totalNumLargeOff[nThreads] += globalInfo->totalNumLargeOff[n];
+		
+			globalInfo->totalIrregularStatusI[nThreads] += globalInfo->totalIrregularStatusI[n];
+			globalInfo->totalIrregularCounts[nThreads] += globalInfo->totalIrregularCounts[n];
+		
+			globalInfo->totalIrregularStatusE[nThreads] += globalInfo->totalIrregularStatusE[n];
+			globalInfo->totalIrregularStatusEI[nThreads] += globalInfo->totalIrregularStatusEI[n];
+		
+			globalInfo->totalBits[nThreads] += globalInfo->totalBits[n];
+		
+			globalInfo->maxStartOffset[nThreads] = ( (globalInfo->maxStartOffset[n] > globalInfo->maxStartOffset[nThreads]) ? 
+			globalInfo->maxStartOffset[n] : globalInfo->maxStartOffset[nThreads]);
+		}
+	}
+
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+	void PrintGlobalInfo(uint8_t nThreads)
+	{
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total block read:                                   %19"PRIu64" |\n", globalInfo->totalBlocks[nThreads]);
+		printf("| Total block with lower case symbols:                %19"PRIu64" |\n", globalInfo->totalLowerCaseBlocks[nThreads]);
+		printf("| Total block with extra symbols (N's and n's):       %19"PRIu64" |\n", globalInfo->totalXchrBlocks[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total number of 's' lines:                          %19"PRIu64" |\n", globalInfo->totalSLines[nThreads]);
+		printf("| Total number of 'q' lines:                          %19"PRIu64" |\n", globalInfo->totalQLines[nThreads]);
+		printf("| Total number of 'i' lines:                          %19"PRIu64" |\n", globalInfo->totalILines[nThreads]);
+		printf("| Total number of 'e' lines:                          %19"PRIu64" |\n", globalInfo->totalELines[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total number of bases (with the gaps)               %19"PRIu64" |\n", globalInfo->totalBases[nThreads]);
+		printf("| Total number of gaps                                %19"PRIu64" |\n", globalInfo->totalGaps[nThreads]);
+		printf("| Total number of lower case bases                    %19"PRIu64" |\n", globalInfo->totalLowerCaseSymbols[nThreads]);
+		printf("| Total number of extra symbols {N and n}             %19"PRIu64" |\n", globalInfo->totalXcharN[nThreads]);
+		printf("| Total number of extra symbols {N, n, C, c}          %19"PRIu64" |\n", globalInfo->totalXcharNC[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total number of negative start offsets              %19"PRIu64" |\n", globalInfo->totalNumNegativeOff[nThreads]);
+		printf("| Total number of large start offsets                 %19"PRIu64" |\n", globalInfo->totalNumLargeOff[nThreads]);
+		printf("| Maximum start offset value processed                %19"PRIu64" |\n", globalInfo->maxStartOffset[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total number of irregular status symbols 'i'        %19"PRIu64" |\n", globalInfo->totalIrregularStatusI[nThreads]);
+		printf("| Total number of irregular count values 'i'          %19"PRIu64" |\n", globalInfo->totalIrregularCounts[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+		printf("| Total number of irregular status symbols 'e'        %19"PRIu64" |\n", globalInfo->totalIrregularStatusE[nThreads]);
+		printf("| Total number of irregular status symbols 'e' - 'i'  %19"PRIu64" |\n", globalInfo->totalIrregularStatusEI[nThreads]);
+		printf("+-------------------------------------------------------------------------+\n");
+	}
+
+#endif // OPT_OFF
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		
 #ifdef DEBUG_1

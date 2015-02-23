@@ -4,6 +4,7 @@ CC = gcc
 
 CFLAGS_NULL_DEV = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -DNULL_DEV -fstrict-aliasing -ffast-math -msse2
 CFLAGSD = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -DDEBUG_1 -fstrict-aliasing -ffast-math -msse2
+CFLAGSO = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -DOPT_OFF -fstrict-aliasing -ffast-math -msse2
 CFLAGS = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -ffast-math -msse2
 
 #CFLAGS_NULL_DEV = -Wall -g -DTHREADS -D_FILE_OFFSET_BITS=64 -DNULL_DEV -fstrict-aliasing -ffast-math -msse2
@@ -13,7 +14,7 @@ CFLAGS = -O3 -Wall -DTHREADS -D_FILE_OFFSET_BITS=64 -fstrict-aliasing -ffast-mat
 LIBS = -lm -lpthread
 #DEPS = defs.h 
 
-PROGS = $(BIN_DIR)/MAFCOenc $(BIN_DIR)/MAFCOdec
+PROGS = $(BIN_DIR)/MAFCOenc $(BIN_DIR)/MAFCOdec $(BIN_DIR)/MAFCOencOptimized
 
 #PROGS = $(BIN_DIR)/MAFCOenc $(BIN_DIR)/MAFCOdec \
 #	$(BIN_DIR)/MAFCOencD $(BIN_DIR)/MAFCOencND \
@@ -23,7 +24,8 @@ PROGS = $(BIN_DIR)/MAFCOenc $(BIN_DIR)/MAFCOdec
 OBJS =	$(OBJS_DIR)/mem.o $(OBJS_DIR)/ac.o $(OBJS_DIR)/common.o \
 	$(OBJS_DIR)/context.o $(OBJS_DIR)/msab.o $(OBJS_DIR)/slines.o \
 	$(OBJS_DIR)/qlines.o $(OBJS_DIR)/ilines.o $(OBJS_DIR)/elines.o \
-	$(OBJS_DIR)/models.o $(OBJS_DIR)/hash.o $(OBJS_DIR)/element.o
+	$(OBJS_DIR)/models.o $(OBJS_DIR)/hash.o $(OBJS_DIR)/element.o \
+	$(OBJS_DIR)/gtod.o	
 
 all:	dir $(PROGS)
 
@@ -34,11 +36,13 @@ dir:
 	fi
 
 $(BIN_DIR)/MAFCOenc: MAFEnc.c *.h $(OBJS)
-	$(CC) $(CFLAGS) -o $(BIN_DIR)/MAFCOenc MAFEnc.c $(OBJS) $(LIBS)
+	$(CC) $(CFLAGSO) -o $(BIN_DIR)/MAFCOenc MAFEnc.c $(OBJS) $(LIBS)
+
+$(BIN_DIR)/MAFCOencOptimized: MAFEnc.c *.h $(OBJS)
+	$(CC) $(CFLAGS) -o $(BIN_DIR)/MAFCOencOptimized MAFEnc.c $(OBJS) $(LIBS)
 
 $(BIN_DIR)/MAFCOdec: MAFDec.c *.h $(OBJS)
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/MAFCOdec MAFDec.c $(OBJS) $(LIBS)
-
 
 #$(BIN_DIR)/MAFCOencD: MAFEnc.c *.h $(OBJS)
 #	$(CC) $(CFLAGSD) -o $(BIN_DIR)/MAFCOencD MAFEnc.c $(OBJS) $(LIBS)
@@ -85,6 +89,9 @@ $(OBJS_DIR)/element.o: element.c *.h
 	
 $(OBJS_DIR)/hash.o: hash.c *.h
 	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/hash.o hash.c
+
+$(OBJS_DIR)/gtod.o: gtod.c *.h
+	$(CC) -c $(CFLAGS) -o $(OBJS_DIR)/gtod.o gtod.c
 
 clean:
 	/bin/rm -fr $(OBJS_DIR)
