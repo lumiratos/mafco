@@ -109,11 +109,10 @@ Now if you want to decode only the first 4 GOBs of the "encodedFile.dat", using 
 ## Issues ##
 At the time, there are no relevant issues detected but if you find one please let me know using the [Issues link](https://github.com/lumiratos/mafco/issues) at GitHub.
 
-<!--
+
 ## Cite ##
 If you use this software, please cite the follwing publication: 
-* [Luís M. O. Matos](http://sweet.ua.pt/luismatos), [António J. R. Neves](http://sweet.ua.pt/an), [Diogo Pratas](http://sweet.ua.pt/pratas), and [Armando J. Pinho](http://sweet.ua.pt/ap), ["MAFCO: a compression tool for MAF files"](http://dx.doi.org/10.1371/journal.pone.0116082), [PLoS One](http://www.plosone.org/), (accepted on October 22, 2014).
--->
+* [Luís M. O. Matos](http://sweet.ua.pt/luismatos), [António J. R. Neves](http://sweet.ua.pt/an), [Diogo Pratas](http://sweet.ua.pt/pratas), and [Armando J. Pinho](http://sweet.ua.pt/ap), ["MAFCO: a compression tool for MAF files"](http://dx.doi.org/10.1371/journal.pone.0116082), [PLoS One](http://www.plosone.org/), volume 10, number 3, page e0116082, March 2015.
 
 ## Data sets ##
 Some data set that can be used for evaluate this tool.
